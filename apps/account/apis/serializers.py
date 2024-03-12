@@ -24,14 +24,13 @@ class EmailExistValidation(serializers.ValidationError):
 class AccountSerializer(serializers.ModelSerializer):
 
     email = serializers.EmailField(required=True, max_length=30)
-    first_name = serializers.CharField(required=True, max_length=20)
-    last_name = serializers.CharField(max_length=20)
+    fullname = serializers.CharField(required=True, max_length=30)
     password = serializers.CharField(required=True, max_length=20)
     confirm_password = serializers.CharField(required=True, max_length=20, write_only=True)
         
     class Meta:
         model = User
-        fields = ('email', 'first_name', 'last_name', 'password', 'confirm_password')
+        fields = ('email', 'fullname', 'password', 'confirm_password')
 
     def validate(self, attrs):
         password = attrs.get('password')
@@ -47,8 +46,7 @@ class AccountSerializer(serializers.ModelSerializer):
         user = Account.objects.create_user(
             email=validated_data['email'],
             username=generate_user(),
-            first_name=validated_data['first_name'],
-            last_name=validated_data['last_name'],
+            fullname=validated_data['fullname'],
             password=validated_data['password']
         )
         return user

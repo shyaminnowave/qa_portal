@@ -17,7 +17,9 @@ class AccountCreateView(generics.CreateAPIView):
 
     def create(self, request, *args, **kwargs):
         response = super().create(request, *args, **kwargs)
-        return Response({"success": True, 'data': "User Creation Successfull"}, status=status.HTTP_201_CREATED)
+        if response.status_code == status.HTTP_201_CREATED:
+            return Response({"success": True, 'data': "User Creation Successfull"}, status=status.HTTP_201_CREATED)
+        return Response({"success": False, "error": "User Creation Failed"}, status=status.HTTP_400_BAD_REQUEST)
     
 
 class LoginView(generics.GenericAPIView):
@@ -44,7 +46,10 @@ class LoginView(generics.GenericAPIView):
         if serializer.is_valid(raise_exception=True):
             user_cred = self._perform_login(request, email, password)
             if user_cred is not None:
+                refresh = user_cred['refresh']
+                del user_cred['refresh']
                 response = Response({'success': True, 'message': 'Login Successfull', 'data': user_cred}, status=status.HTTP_200_OK)
+                response.set_cookie('refresh', refresh)
                 return response
         return Response({'success':False, 'error': "Please Check the login Creditionals"}, status=status.HTTP_404_NOT_FOUND)
     
@@ -53,7 +58,8 @@ class LoginView(generics.GenericAPIView):
         if user is not None:
             token = get_token_for_user(user)
             return {
-                'token': token,
+                'access_token': token['access'],
+                'refresh': token['refresh'],
                 'email': user.email
             }
         return None

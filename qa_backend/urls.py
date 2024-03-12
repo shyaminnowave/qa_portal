@@ -40,7 +40,7 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path('api/', include('apps.account.apis.urls')),
     path('api/', include('apps.testcase_app.apis.urls')),
-    re_path(r'^.$', TemplateView.as_view(template_name='index.html'))
+    re_path(r'^.*$', TemplateView.as_view(template_name='index.html'))
 ]
 
 urlpatterns += static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)

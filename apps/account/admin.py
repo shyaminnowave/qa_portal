@@ -2,11 +2,22 @@ from typing import Any
 from django.contrib import admin
 from apps.account.models import Account
 from django.contrib.auth.admin import UserAdmin
+from django.utils.translation import gettext_lazy as _
 
 # Register your models here.
 
-class AccountAdmin(UserAdmin):
+class AccountAdmin(admin.ModelAdmin):
     readonly_fields = ['password']
+    list_display = ['username', 'email', 'fullname', 'is_staff']
+    
+    fieldsets = (
+        (None, {'fields': ('username', 'password')}),
+        (_('Personal info'), {'fields': ('email',)}),
+        (_('Permissions'), {
+            'fields': ('is_active', 'is_staff', 'is_superuser', 'groups', 'user_permissions'),
+        }),
+        (_('Important dates'), {'fields': ('last_login', 'date_joined')}),
+    )
 
     def get_form(self, request, obj=None, **kwargs):
         form = super().get_form(request, obj, **kwargs)

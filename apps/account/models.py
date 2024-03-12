@@ -23,8 +23,7 @@ class Account(AbstractBaseUser, PermissionsMixin, TimeStampedModel):
 
     )
     username = models.CharField(_('username'), max_length=30, validators=[username_validator])
-    first_name = models.CharField(_('firstname'), max_length=50)
-    last_name = models.CharField(_('lastname'), max_length=50)
+    fullname = models.CharField(_('fullname'), max_length=30)
     is_staff = models.BooleanField(
         _('staff status'), default=False, help_text=_('Designates whether the user can log into this admin site.')
     )
@@ -46,8 +45,8 @@ class Account(AbstractBaseUser, PermissionsMixin, TimeStampedModel):
         verbose_name_plural = _("Accounts")
 
     def get_full_name(self):
-        return '%s %s' % (self.first_name, self.last_name)
-
-    def get_short_name(self):
-        return self.first_name
+        return self.fullname
     
+    def get_short_name(self):
+        name = self.fullname.split()
+        return name
