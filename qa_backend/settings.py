@@ -29,10 +29,11 @@ DEBUG = True
 ALLOWED_HOSTS = ['127.0.0.1', 'localhost']
 
 CORS_ORIGIN_ALLOW_ALL = True
+CORS_ALLOW_CREDENTIALS = True
 
 CORS_ALLOWED_ORIGINS = [
     'http://127.0.0.1:8000',
-    'http://localhost:3000'
+    'http://127.0.0.1:3000'
 
 ]
 
@@ -73,6 +74,8 @@ STATICFILES_DIRS = [
 ]
 
 ROOT_URLCONF = 'qa_backend.urls'
+
+SESSION_COOKIE_DOMAIN = '127.0.0.1'
 
 TEMPLATES = [
     {
@@ -128,6 +131,11 @@ AUTH_PASSWORD_VALIDATORS = [
 ]
 
 AUTH_USER_MODEL = 'account.Account'
+
+# REST_FRAMEWORK = {
+#     'EXCEPTION_HANDLER': 'apps.account.custom_exception.custom_exception_handler'
+# }
+
 
 SIMPLE_JWT = {
     "ACCESS_TOKEN_LIFETIME": timedelta(days=1),

@@ -6,11 +6,15 @@ from rest_framework.exceptions import APIException
 from django.utils.translation import gettext_lazy as _
 from rest_framework import status
 from apps.account.utils import generate_user
+from django.core.exceptions import ValidationError
 import re
 
 User = get_user_model()
 
-class CustomValueError(ValueError): ...
+class CustomValidation(serializers.ValidationError):
+
+    def __init__(self, message):
+        super().__init__({'message': message})
 
 class EmailExistValidation(serializers.ValidationError):
     status_code = status.HTTP_400_BAD_REQUEST
@@ -32,13 +36,18 @@ class AccountSerializer(serializers.ModelSerializer):
         model = User
         fields = ('email', 'fullname', 'password', 'confirm_password')
 
+    def validate_email(self, value):
+        if value is None:
+            raise CustomValidation({'email': "Email Field is should not be empty"})
+        return value
+
     def validate(self, attrs):
         password = attrs.get('password')
-        confirm_password = attrs.get('confirm_password')
+        confirm_password = attrs.get('confirm_password')            
         if password != confirm_password:
-            raise serializers.ValidationError("Password and Confirm Password are not Matching")
+            raise serializers.ValidationError({"message": "Password and confirm Password is Not Matching"})
         if User.objects.filter(email=attrs.get('email')).exists():
-            raise serializers.ValidationError("Email Already Exists Please Go with another Email")
+            raise serializers.ValidationError({"message": "Email Already Exists Please Go with another Email"})
         return attrs
 
     def create(self, validated_data):

@@ -7,14 +7,28 @@ from rest_framework import status
 from apps.account.utils import get_token_for_user
 from drf_yasg.utils import swagger_auto_schema
 from drf_yasg import openapi
+from rest_framework_simplejwt.tokens import RefreshToken
+from rest_framework.views import APIView
+from rest_framework_simplejwt.authentication import JWTAuthentication
+
 
 
 class AccountCreateView(generics.CreateAPIView):
 
+    authentication_classes = [JWTAuthentication]
 
     queryset = Account.objects.all()
     serializer_class = AccountSerializer
 
+    @swagger_auto_schema(
+            manual_parameters=openapi.Parameter(
+                name='Authorization',
+                in_=openapi.IN_HEADER,
+                type=openapi.TYPE_STRING,
+                description="Jwt token in the format 'Bearer <token>'",
+                required=True
+            )
+    )
     def create(self, request, *args, **kwargs):
         response = super().create(request, *args, **kwargs)
         if response.status_code == status.HTTP_201_CREATED:
@@ -46,10 +60,7 @@ class LoginView(generics.GenericAPIView):
         if serializer.is_valid(raise_exception=True):
             user_cred = self._perform_login(request, email, password)
             if user_cred is not None:
-                refresh = user_cred['refresh']
-                del user_cred['refresh']
                 response = Response({'success': True, 'message': 'Login Successfull', 'data': user_cred}, status=status.HTTP_200_OK)
-                response.set_cookie('refresh', refresh)
                 return response
         return Response({'success':False, 'error': "Please Check the login Creditionals"}, status=status.HTTP_404_NOT_FOUND)
     
@@ -63,3 +74,18 @@ class LoginView(generics.GenericAPIView):
                 'email': user.email
             }
         return None
+    
+
+class LogoutView(APIView):
+
+    def post(self, request, *args, **kwargs):
+        try:
+            refresh_token = request.data.get('refresh_token')
+            token = RefreshToken(refresh_token)
+            print(request.data)
+            # if request.user.is_authenticated and isinstance(request.user, Account):
+            token.blacklist()
+            return Response({"success": True, "data": "Logout Successfull"}, status=status.HTTP_205_RESET_CONTENT)
+        except Exception as e:
+            print(str(e))
+            return Response({"success": False, "data": "Error"}, status=status.HTTP_400_BAD_REQUEST)
