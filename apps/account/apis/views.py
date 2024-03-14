@@ -69,7 +69,7 @@ class LoginView(generics.GenericAPIView):
         if user is not None:
             token = get_token_for_user(user)
             return {
-                'access_token': token['access'],
+                'access': token['access'],
                 'refresh': token['refresh'],
                 'email': user.email
             }

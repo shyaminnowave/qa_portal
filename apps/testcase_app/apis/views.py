@@ -4,6 +4,7 @@ from apps.testcase_app.models import TestCaseModel, TestCaseStep
 from apps.testcase_app.apis.serializers import TestCaseSerializerList, TestCaseSerializer
 from rest_framework.renderers import JSONRenderer
 from rest_framework.response import Response
+from rest_framework.permissions import IsAuthenticated
 from django.shortcuts import get_object_or_404
 
 
@@ -20,7 +21,9 @@ class TestCaseListView(generics.ListAPIView):
     queryset = TestCaseModel.objects.all()
     serializer_class = TestCaseSerializerList
 
-
+    def get(self, request, *args, **kwargs):
+        super().list(request, *args, **kwargs)
+    
 class TestCaseView(generics.CreateAPIView):
 
     serializer_class = TestCaseSerializer
