@@ -10,12 +10,11 @@ from drf_yasg import openapi
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework.views import APIView
 from rest_framework_simplejwt.authentication import JWTAuthentication
+from apps.account.signals import user_token_login, user_token_logout
 
 
 
 class AccountCreateView(generics.CreateAPIView):
-
-    authentication_classes = [JWTAuthentication]
 
     queryset = Account.objects.all()
     serializer_class = AccountSerializer
@@ -67,6 +66,7 @@ class LoginView(generics.GenericAPIView):
     def _perform_login(self, request, email, password):
         user = authenticate(email=email, password=password)
         if user is not None:
+            # user_token_login(sender=user.__class__, user=user, request=request)
             token = get_token_for_user(user)
             return {
                 'access': token['access'],
@@ -82,10 +82,9 @@ class LogoutView(APIView):
         try:
             refresh_token = request.data.get('refresh_token')
             token = RefreshToken(refresh_token)
-            print(request.data)
-            # if request.user.is_authenticated and isinstance(request.user, Account):
-            token.blacklist()
-            return Response({"success": True, "data": "Logout Successfull"}, status=status.HTTP_205_RESET_CONTENT)
+            if request.user.is_authenticated and isinstance(request.user, Account):
+                user_token_logout(sender=request.user.__class__, user=request.user, request=request)
+                token.blacklist()
+                return Response({"success": True, "data": "Logout Successfull"}, status=status.HTTP_205_RESET_CONTENT)
         except Exception as e:
-            print(str(e))
             return Response({"success": False, "data": "Error"}, status=status.HTTP_400_BAD_REQUEST)

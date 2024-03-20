@@ -1,23 +1,74 @@
 from rest_framework import serializers
-from apps.stbs.models import Language
+from apps.stbs.models import Language, STBManufacture, Natco, NactoManufactureLanguage
 import re
 
 
-class LanguageSerializer(serializers.Serializer):
+def non_number_validator(value):
+    if value and not re.match(r'^[a-zA-Z/S]+$', value):
+        raise serializers.ValidationError("Cannot Contain Numbers")
+    return value
+
+class LanguageSerializer(serializers.ModelSerializer):
 
     language_name = serializers.CharField(required=True, max_length=20)
 
-    def validate_language(self, value):
+    class Meta:
+        fields = ('language_name',)
+        model = Language
+
+    def validate_language_name(self, value):
         if value is None:
             raise serializers.ValidationError("Language Field cannot be Empty")
-        elif value and not re.match(r"^[a-zA-Z\S]+$", value):
+        elif value and not re.match(r"^[a-zA-Z/S]+$", value):
             raise serializers.ValidationError("Language Cannot Contain Numbers and Symbols")
         return value
 
-    def create(self, validated_data):
-        return Language.objects.create(language_name=validated_data.get('language'))
+class STBManufactureSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        fields = ('name', )
+        model = STBManufacture
+
+    def validate_name(self, value):
+        if value is None:
+            raise serializers.ValidationError("STB Manufacture Name Cannot be Empty")
+        elif value and not re.match(r"^[a-zA-Z/S]+$", value):
+            raise serializers.ValidationError("STB Manufacture Name Cannot Contain Numbers")
+        return value
     
-    def update(self, instance, validated_data):
-        instance.language_name = validated_data.get('language', instance.language)
-        instance.save()
-        return instance
+    def validate(self, attrs):
+        if attrs['name']:
+            if STBManufacture.objects.filter(name=attrs['name']).exists():
+                raise serializers.ValidationError("STB Manufacture Already Exists")
+            else:
+                return attrs
+        else:
+            raise serializers.ValidationError("Name Field Cannot be Empty")
+            
+
+
+class NactoSerializer(serializers.ModelSerializer):
+
+    country = serializers.CharField(required=True, validators=[non_number_validator])
+    natco = serializers.CharField(required=True, validators=[non_number_validator])
+
+    class Meta:
+        fields = ('country', 'natco',)
+        model = Natco
+
+    def validate(self, attrs): 
+        if attrs['country'] and attrs['natco']:
+            if Natco.objects.filter(country=attrs['country'], natco=attrs['natco']).exists():
+                raise serializers.ValidationError("Country or Nacto Already Present Please Check")
+        return attrs
+    
+
+class NatcoLanguageSerializer(serializers.ModelSerializer):
+
+    natco = serializers.PrimaryKeyRelatedField(queryset=Natco.objects.all(), required=True)
+    device_name = serializers.PrimaryKeyRelatedField(queryset=Natco.objects.all(), required=True)
+    language_name = serializers.PrimaryKeyRelatedField(queryset=Natco.objects.all(), required=True)
+
+    class Meta:
+        fields = ('natco', 'device_name', 'language_name',)
+        model = NactoManufactureLanguage

@@ -29,10 +29,15 @@ class TestCaseView(generics.CreateAPIView):
 
 class TestCaseDetailView(generics.RetrieveUpdateDestroyAPIView):
 
-    lookup_field = 'pk'
+    lookup_field = 'jira_id'
     serializer_class = TestCaseSerializer
+    queryset = TestCaseModel.objects.all()
     
     def get_object(self):
-        queryset = get_object_or_404(TestCaseModel, id=self.lookup_field)
+        queryset = get_object_or_404(TestCaseModel, jira_id=self.kwargs.get('jira_id'))
         return queryset
+    
+    def get(self, request, *args, **kwargs):
+        response = super().get(request, *args, **kwargs)
+        return Response({"success": True, "data": response.data})
 

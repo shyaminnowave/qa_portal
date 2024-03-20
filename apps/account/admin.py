@@ -1,6 +1,6 @@
 from typing import Any
 from django.contrib import admin
-from apps.account.models import Account
+from apps.account.models import Account, LoginHistory
 from django.contrib.auth.admin import UserAdmin
 from django.utils.translation import gettext_lazy as _
 
@@ -26,4 +26,6 @@ class AccountAdmin(admin.ModelAdmin):
             form.base_fields['is_superuser', 'is_staff'].disabled = True
         return form
 
+
 admin.site.register(Account, AccountAdmin)
+admin.site.register(LoginHistory)

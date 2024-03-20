@@ -3,5 +3,7 @@ from apps.testcase_app.apis import views
 
 
 urlpatterns = [
-    path('list/test-case/', views.TestCaseListView.as_view())
+    path('test-case/', views.TestCaseListView.as_view()),
+    path('create/test-case/', views.TestCaseView.as_view()),
+    path('test-case/<int:jira_id>/', views.TestCaseDetailView.as_view())
 ]
