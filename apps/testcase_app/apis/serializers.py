@@ -3,8 +3,7 @@ from apps.testcase_app.models import TestCaseModel, TestCaseStep
 
 
 class TestCaseSerializerList(serializers.Serializer):
-    
-    
+
     TODO = 'todo'
     ONGOING = 'ongoing'
     COMPLETED = 'completed'
@@ -26,7 +25,7 @@ class TestStepSerializer(serializers.ModelSerializer):
     
     class Meta:
         model = TestCaseStep
-        fields = ('testcase', 'step_id', 'step_data', 'step_description')
+        fields = ('testcase', 'step_id', 'step_data', 'step_description', 'excepted_result')
 
 
 class TestCaseSerializer(serializers.ModelSerializer):
@@ -35,5 +34,6 @@ class TestCaseSerializer(serializers.ModelSerializer):
     
     class Meta:
         model = TestCaseModel
-        fields = ('test_name', 'jira_id', 'jira_summary', 'test_description', 'comments', 'defects', 'status', 'script_name', 'script', 'test_steps', )
+        fields = ('test_name', 'jira_id', 'jira_summary', 'test_description', 'comments', 'defects', 'status',
+                  'script_name', 'script', 'test_steps', )
 

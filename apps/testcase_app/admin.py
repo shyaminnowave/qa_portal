@@ -9,7 +9,7 @@ class TestStepAdmin(admin.TabularInline):
     model = TestCaseStep
 
 
-class TestCaseModelAdmin(admin.ModelAdmin):
+class TestCaseModelAdmin(SimpleHistoryAdmin):
 
     inlines = [TestStepAdmin]
 
