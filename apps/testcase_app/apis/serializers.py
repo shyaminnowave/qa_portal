@@ -1,3 +1,5 @@
+import re
+
 from rest_framework import serializers
 from apps.testcase_app.models import TestCaseModel, TestCaseStep
 
@@ -31,9 +33,15 @@ class TestStepSerializer(serializers.ModelSerializer):
 class TestCaseSerializer(serializers.ModelSerializer):
 
     test_steps = TestStepSerializer(many=True, required=False)
-    
+
     class Meta:
         model = TestCaseModel
         fields = ('test_name', 'jira_id', 'jira_summary', 'test_description', 'comments', 'defects', 'status',
-                  'script_name', 'script', 'test_steps', )
+                  'automation_status', 'script_name', 'script', 'test_steps', )
 
+    def validate_test_name(self, value):
+        if value is None:
+            raise serializers.ValidationError("Test Name Cannot be Empty")
+        if value and not re.match(r"^[a-zA-Z\S]+$", value):
+            raise serializers.ValidationError("Test Name Cannot Contains Numbers")
+        return value

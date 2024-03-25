@@ -10,6 +10,7 @@ from rest_framework import status
 
 User = get_user_model()
 
+
 class TestUser(TestCase):
 
     def test_create_user(self):
@@ -43,8 +44,7 @@ class TestLoginView(TestCase):
         self.client = APIClient()
         self.user_data = {
             'email': 'test1@gmail.com',
-            'first_name': 'shyam',
-            'last_name': 'kumar',
+            'fullname': 'shyamkumar',
             'password': 'shyamkumar',
             'confirm_password': 'shyamkumar'
         }
@@ -52,6 +52,7 @@ class TestLoginView(TestCase):
     
     def test_create_user(self):
         response = self.client.post(self.url, self.user_data)
+        print("Test", response.data)
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
 
     def test_login_user(self):

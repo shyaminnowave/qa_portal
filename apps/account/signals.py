@@ -19,6 +19,7 @@ def get_client_ip(request):
         ip = request.META.get('REMOTE_ADDR')
     return ip
 
+
 @receiver(user_logged_in)
 def post_login(sender, user, request, **kwargs):
     ip = get_client_ip(request)
@@ -28,6 +29,7 @@ def post_login(sender, user, request, **kwargs):
         user_agent=request.META.get('HTTP_USER_AGENT'),
         is_login=True
     )
+
 
 @receiver(user_logged_out)
 def post_logout(sender, user, request, **kwargs):
@@ -40,6 +42,7 @@ def post_logout(sender, user, request, **kwargs):
             is_login=False
         )
 
+
 @receiver(user_token_login)
 def token_login(sender, user, request, **kwargs):
     ip = get_client_ip(request)
@@ -49,6 +52,7 @@ def token_login(sender, user, request, **kwargs):
         user_agent=request.META.get('HTTP_USER_AGENT'),
         is_login=True
     )
+
 
 @receiver(user_token_logout)
 def token_logout(sender, user, request, **kwargs):

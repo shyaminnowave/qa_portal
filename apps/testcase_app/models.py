@@ -9,6 +9,7 @@ import json
 
 User = get_user_model()
 
+
 class TestCaseModel(TimeStampedModel):
 
     TODO = 'todo'
@@ -16,13 +17,13 @@ class TestCaseModel(TimeStampedModel):
     COMPLETED = 'completed'
 
     NOTAUTOMATABLE = 'not-automatabel'
-    INDEVELOPMETN = 'in-development'
+    INDEVELOPMENT = 'in-development'
     REVIEW = 'review'
     READY = 'ready'
     
     AUTOMATION_CHOICES = (
         (NOTAUTOMATABLE, 'Not-Automatable'),
-        (INDEVELOPMETN, 'In-Development'),
+        (INDEVELOPMENT, 'In-Development'),
         (REVIEW, 'Review'),
         (READY, 'Ready'),
         (COMPLETED, 'Completed')
@@ -38,7 +39,7 @@ class TestCaseModel(TimeStampedModel):
     test_name = models.CharField(_("Test Report Name"), max_length=255,
                                    help_text=("Please Enter the TestCase Name"))
     jira_summary = models.TextField(_("Jira Summary")) 
-    nactos = models.ManyToManyField(Natco, related_name='nactos')
+    natcos = models.ManyToManyField(Natco, related_name='natcos')
     test_description = models.TextField(_("Test description"))
     comments = models.TextField(blank=True, null=True)
     defects = models.TextField(blank=True, null=True)
@@ -47,7 +48,6 @@ class TestCaseModel(TimeStampedModel):
     script = models.CharField(max_length=255, default='Tets')
     automation_status = models.CharField(max_length=20, choices=AUTOMATION_CHOICES)
     history = HistoricalRecords()
-
 
     class Meta:
         verbose_name = 'TestCase'
@@ -74,7 +74,7 @@ class TestCaseModel(TimeStampedModel):
         return self.nactos.all()
     
     @classmethod
-    def create_historical_record(cls, instance, history_type, **kwargs):
+    def create_historical_record(cls, instance, history_type, history_record=None, **kwargs):
         history_record = super().create_historical_record(instance, history_record, **kwargs)
         request_user = kwargs.get('history_user')
         request_method = kwargs.get('request_method')
@@ -96,7 +96,6 @@ class TestCaseStep(TimeStampedModel):
         (COMPLETED, 'Completed')
     )
 
-
     testcase = models.ForeignKey(TestCaseModel, on_delete=models.CASCADE, related_name='test_steps')
     step_id = models.IntegerField(_("step number"))
     step_data = models.TextField(_('Testing Parameters'))
@@ -106,7 +105,7 @@ class TestCaseStep(TimeStampedModel):
     history = HistoricalRecords()
 
     @classmethod
-    def create_historical_record(cls, instance, history_type, **kwargs):
+    def create_historical_record(cls, instance, history_type, history_record=None, **kwargs):
         history_record = super().create_historical_record(instance, history_record, **kwargs)
         request_user = kwargs.get('history_user')
         request_method = kwargs.get('request_method')

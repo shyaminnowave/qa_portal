@@ -13,21 +13,11 @@ from rest_framework_simplejwt.authentication import JWTAuthentication
 from apps.account.signals import user_token_login, user_token_logout
 
 
-
 class AccountCreateView(generics.CreateAPIView):
 
     queryset = Account.objects.all()
     serializer_class = AccountSerializer
 
-    @swagger_auto_schema(
-            manual_parameters=openapi.Parameter(
-                name='Authorization',
-                in_=openapi.IN_HEADER,
-                type=openapi.TYPE_STRING,
-                description="Jwt token in the format 'Bearer <token>'",
-                required=True
-            )
-    )
     def create(self, request, *args, **kwargs):
         response = super().create(request, *args, **kwargs)
         if response.status_code == status.HTTP_201_CREATED:
@@ -39,7 +29,6 @@ class LoginView(generics.GenericAPIView):
     
     queryset = Account.objects.all()
     serializer_class = LoginSerializer
-
 
     @swagger_auto_schema(
             request_body=openapi.Schema(
@@ -59,14 +48,16 @@ class LoginView(generics.GenericAPIView):
         if serializer.is_valid(raise_exception=True):
             user_cred = self._perform_login(request, email, password)
             if user_cred is not None:
-                response = Response({'success': True, 'message': 'Login Successfull', 'data': user_cred}, status=status.HTTP_200_OK)
+                response = Response({'success': True, 'message': 'Login Successfull', 'data': user_cred},
+                                    status=status.HTTP_200_OK)
                 return response
-        return Response({'success':False, 'error': "Please Check the login Creditionals"}, status=status.HTTP_404_NOT_FOUND)
+        return Response({'success': False, 'error': "Please Check the login Creditionals"},
+                        status=status.HTTP_404_NOT_FOUND)
     
     def _perform_login(self, request, email, password):
         user = authenticate(email=email, password=password)
         if user is not None:
-            # user_token_login(sender=user.__class__, user=user, request=request)
+            user_token_login.send(sender=user, user=user, request=request)
             token = get_token_for_user(user)
             return {
                 'access': token['access'],
@@ -83,7 +74,7 @@ class LogoutView(APIView):
             refresh_token = request.data.get('refresh_token')
             token = RefreshToken(refresh_token)
             if request.user.is_authenticated and isinstance(request.user, Account):
-                user_token_logout(sender=request.user.__class__, user=request.user, request=request)
+                user_token_logout.send(sender=request.user.__class__, user=request.user, request=request)
                 token.blacklist()
                 return Response({"success": True, "data": "Logout Successfull"}, status=status.HTTP_205_RESET_CONTENT)
         except Exception as e:

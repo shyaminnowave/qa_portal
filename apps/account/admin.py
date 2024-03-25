@@ -6,6 +6,7 @@ from django.utils.translation import gettext_lazy as _
 
 # Register your models here.
 
+
 class AccountAdmin(admin.ModelAdmin):
     readonly_fields = ['password']
     list_display = ['username', 'email', 'fullname', 'is_staff']
