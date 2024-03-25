@@ -53,7 +53,7 @@ class Account(AbstractBaseUser, PermissionsMixin, TimeStampedModel):
     
 
 class LoginHistory(models.Model):
-    
+
     user = models.ForeignKey(Account, on_delete=models.CASCADE, related_name='login_history')
     ip = models.CharField(max_length=15, blank=True, null=True)
     user_agent = models.TextField(blank=True, null=True)
@@ -63,13 +63,14 @@ class LoginHistory(models.Model):
 
     def __str__(self) -> str:
         return f"{self.id} - {self.user} - {self.ip}"
-    
+
     def __eq__(self, other: object) -> bool:
         return self.ip == other.ip and self.user_agent == other.user_agent
-    
+
     def __hash__(self) -> int:
         return hash(('ip', self.ip, 'user_agent', self.user_agent))
-    
+
     class Meta:
         verbose_name = 'Login History'
         verbose_name_plural = 'Login Historys'
+        

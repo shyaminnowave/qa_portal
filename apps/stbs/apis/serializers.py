@@ -8,12 +8,13 @@ def non_number_validator(value):
         raise serializers.ValidationError("Cannot Contain Numbers")
     return value
 
+
 class LanguageSerializer(serializers.ModelSerializer):
 
     language_name = serializers.CharField(required=True, max_length=20)
 
     class Meta:
-        fields = ('language_name',)
+        fields = ('id', 'language_name',)
         model = Language
 
     def validate_language_name(self, value):
@@ -23,10 +24,11 @@ class LanguageSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError("Language Cannot Contain Numbers and Symbols")
         return value
 
+
 class STBManufactureSerializer(serializers.ModelSerializer):
 
     class Meta:
-        fields = ('name', )
+        fields = ('id', 'name', )
         model = STBManufacture
 
     def validate_name(self, value):
@@ -44,7 +46,6 @@ class STBManufactureSerializer(serializers.ModelSerializer):
                 return attrs
         else:
             raise serializers.ValidationError("Name Field Cannot be Empty")
-            
 
 
 class NactoSerializer(serializers.ModelSerializer):
@@ -53,7 +54,7 @@ class NactoSerializer(serializers.ModelSerializer):
     natco = serializers.CharField(required=True, validators=[non_number_validator])
 
     class Meta:
-        fields = ('country', 'natco',)
+        fields = ('id', 'country', 'natco',)
         model = Natco
 
     def validate(self, attrs): 
@@ -70,5 +71,5 @@ class NatcoLanguageSerializer(serializers.ModelSerializer):
     language_name = serializers.PrimaryKeyRelatedField(queryset=Natco.objects.all(), required=True)
 
     class Meta:
-        fields = ('natco', 'device_name', 'language_name',)
+        fields = ('id', 'natco', 'device_name', 'language_name',)
         model = NactoManufactureLanguage

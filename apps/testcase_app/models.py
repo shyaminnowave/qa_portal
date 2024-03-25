@@ -37,7 +37,7 @@ class TestCaseModel(TimeStampedModel):
 
     jira_id = models.IntegerField(_("Jira Id"), primary_key=True, unique=True, help_text=("Jira Id"))
     test_name = models.CharField(_("Test Report Name"), max_length=255,
-                                   help_text=("Please Enter the TestCase Name"))
+                                    help_text=("Please Enter the TestCase Name"))
     jira_summary = models.TextField(_("Jira Summary")) 
     natcos = models.ManyToManyField(Natco, related_name='natcos')
     test_description = models.TextField(_("Test description"))

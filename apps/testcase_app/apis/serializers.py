@@ -4,23 +4,17 @@ from rest_framework import serializers
 from apps.testcase_app.models import TestCaseModel, TestCaseStep
 
 
-class TestCaseSerializerList(serializers.Serializer):
+class TestCaseSerializerList(serializers.ModelSerializer):
 
-    TODO = 'todo'
-    ONGOING = 'ongoing'
-    COMPLETED = 'completed'
+    class Meta:
+        fields = ('jira_id', 'test_name', 'jira_summary', 'test_description', 'natcos',
+                  'status', 'automation_status')
+        model = TestCaseModel
 
-    STATUS_CHOICES = (
-        (TODO, 'Todo'),
-        (ONGOING, 'On-Going'),
-        (COMPLETED, 'Completed')
-    )
-
-    test_name = serializers.CharField()
-    jira_id = serializers.IntegerField()
-    jira_summary = serializers.CharField()
-    test_description = serializers.CharField()
-    status = serializers.ChoiceField(choices=STATUS_CHOICES)
+    def to_representation(self, instance):
+        represent = super(TestCaseSerializerList, self).to_representation(instance)
+        represent['natcos'] = [x.natco for x in instance.natcos.all()]
+        return represent
 
 
 class TestStepSerializer(serializers.ModelSerializer):
