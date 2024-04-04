@@ -15,28 +15,16 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path, include, re_path
-from drf_yasg.views import get_schema_view
-from drf_yasg import openapi
 from django.conf import settings
 from django.conf.urls.static import static
 from django.views.generic import TemplateView
-
-
-schema_view = get_schema_view(
-    openapi.Info(
-        title='QA PORTAL',
-        default_version='v1',
-        description='The Testcase Management System is a Django-based web application designed to facilitate the creation, storage, and documentation of test cases',
-        terms_of_service="https://www.google.com/policies/terms/",
-    ),
-    public=True
-)
+from drf_spectacular.views import SpectacularAPIView, SpectacularRedocView, SpectacularSwaggerView
 
 urlpatterns = [
-    path('swagger<format>/', schema_view.without_ui(cache_timeout=0), name='schema-json'),
-    path('swagger/', schema_view.with_ui('swagger', cache_timeout=0), name='schema-swagger-ui'),
-    path('redoc/', schema_view.with_ui('redoc', cache_timeout=0), name='schema-redoc'),
     path('admin/', admin.site.urls),
+    path('api/schema/', SpectacularAPIView.as_view(), name='schema'),
+    path('api/schema/swagger-ui/', SpectacularSwaggerView.as_view(url_name='schema'), name='swagger-ui'),
+    path('api/schema/redoc/', SpectacularRedocView.as_view(url_name='schema'), name='redoc'),
     path('api/', include('apps.account.apis.urls')),
     path('api/', include('apps.testcase_app.apis.urls')),
     path('api/', include('apps.stbs.apis.urls')),

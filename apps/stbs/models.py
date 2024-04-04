@@ -33,7 +33,7 @@ class Natco(TimeStampedModel):
 class NactoManufactureLanguage(TimeStampedModel):
     natco = models.ForeignKey(Natco, on_delete=models.CASCADE)
     device_name = models.ForeignKey(STBManufacture, on_delete=models.CASCADE)
-    language_name = models.ForeignKey(Language, on_delete=models.CASCADE)
+    language_name = models.ManyToManyField('Language', related_name='natco_maufacture')
     history = HistoricalRecords()
 
     def __str__(self) -> str:

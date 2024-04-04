@@ -5,12 +5,12 @@ from apps.account.apis.serializers import AccountSerializer, LoginSerializer
 from django.contrib.auth import authenticate
 from rest_framework import status
 from apps.account.utils import get_token_for_user
-from drf_yasg.utils import swagger_auto_schema
-from drf_yasg import openapi
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework.views import APIView
 from rest_framework_simplejwt.authentication import JWTAuthentication
 from apps.account.signals import user_token_login, user_token_logout
+from drf_spectacular.utils import extend_schema, OpenApiParameter, OpenApiExample, extend_schema_view
+from drf_spectacular.types import OpenApiTypes
 
 
 class AccountCreateView(generics.CreateAPIView):
@@ -30,17 +30,6 @@ class LoginView(generics.GenericAPIView):
     queryset = Account.objects.all()
     serializer_class = LoginSerializer
 
-    @swagger_auto_schema(
-            request_body=openapi.Schema(
-                type=openapi.TYPE_OBJECT,
-                required=['email', 'password'],
-                properties={
-                    'email': openapi.Schema(type=openapi.FORMAT_EMAIL, default="user@email.com", description="Please Enter you valid Email"),
-                    'password': openapi.Schema(type=openapi.FORMAT_PASSWORD, default="password", description="Please Enter the Password")
-                },
-            ),
-            responses={200: 'Success'}
-    )
     def post(self, request, *args, **kwargs):
         email = request.data.get('email')
         password = request.data.get('password')

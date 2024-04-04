@@ -71,6 +71,7 @@ class LoginHistory(models.Model):
         return hash(('ip', self.ip, 'user_agent', self.user_agent))
 
     class Meta:
+        ordering = ['-date_time']
         verbose_name = 'Login History'
-        verbose_name_plural = 'Login Historys'
+        verbose_name_plural = 'Login Histories'
         

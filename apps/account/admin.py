@@ -28,5 +28,10 @@ class AccountAdmin(admin.ModelAdmin):
         return form
 
 
+class LoginHistoryAdmin(admin.ModelAdmin):
+    list_display = ['user', 'id', 'date_time', 'ip', 'user_agent', 'is_logged_in']
+    list_filter = ['user']
+
+
 admin.site.register(Account, AccountAdmin)
-admin.site.register(LoginHistory)
+admin.site.register(LoginHistory, LoginHistoryAdmin)

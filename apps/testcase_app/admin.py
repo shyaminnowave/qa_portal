@@ -4,13 +4,16 @@ from simple_history.admin import SimpleHistoryAdmin
 
 # Register your models here.
 
+
 class TestStepAdmin(admin.TabularInline):
 
+    extra = 3
     model = TestCaseStep
 
 
 class TestCaseModelAdmin(SimpleHistoryAdmin):
 
     inlines = [TestStepAdmin]
+
 
 admin.site.register(TestCaseModel, TestCaseModelAdmin)

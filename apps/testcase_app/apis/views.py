@@ -1,18 +1,17 @@
 from rest_framework.views import Response
 from rest_framework import generics
 from apps.testcase_app.models import TestCaseModel, TestCaseStep
-from apps.testcase_app.apis.serializers import TestCaseSerializerList, TestCaseSerializer
-from rest_framework.renderers import JSONRenderer
+from apps.testcase_app.apis.serializers import TestCaseSerializerList, TestCaseSerializer, ExcelSerializer
 from rest_framework.response import Response
-from rest_framework_simplejwt.authentication import JWTAuthentication
-from rest_framework.permissions import IsAuthenticated
 from django.shortcuts import get_object_or_404
-from rest_framework.pagination import PageNumberPagination
-from rest_framework.decorators import permission_classes
 from apps.testcase_app.pagination import CustomPagination
 from rest_framework.filters import SearchFilter
-from drf_yasg.utils import swagger_auto_schema
-from drf_yasg import openapi
+from openpyxl import load_workbook
+from django.db import transaction
+from django.forms.models import model_to_dict
+from django.http import JsonResponse
+from drf_spectacular.utils import extend_schema, OpenApiParameter, OpenApiExample
+from drf_spectacular.types import OpenApiTypes
 
 
 class TestCaseListView(generics.ListAPIView):
@@ -23,7 +22,7 @@ class TestCaseListView(generics.ListAPIView):
     serializer_class = TestCaseSerializerList
     pagination_class = CustomPagination
     filter_backends = [SearchFilter]
-    search_fields = ['jira_id', 'test_name', 'natcos', 'status', 'automation_status']
+    search_fields = ['jira_id', 'test_name', 'status', 'automation_status']
 
     def get(self, request, *args, **kwargs):
         return super().list(request, *args, **kwargs)
@@ -33,18 +32,6 @@ class TestCaseView(generics.CreateAPIView):
 
     serializer_class = TestCaseSerializer
 
-    @swagger_auto_schema(
-        request_body=TestCaseSerializer,  # Assuming TestCaseSerializer handles request body
-        manual_parameters=[
-            openapi.Parameter('Status', in_=openapi.IN_QUERY, type=openapi.TYPE_STRING, required=True,
-                              enum=[TestCaseModel.TODO, TestCaseModel.ONGOING, TestCaseModel.COMPLETED],
-                              description="Dropdown 1 description"),
-            openapi.Parameter('Automation Status', in_=openapi.IN_QUERY, type=openapi.TYPE_STRING, required=True,
-                              enum=[TestCaseModel.NOTAUTOMATABLE, TestCaseModel.INDEVELOPMENT, TestCaseModel.READY,
-                                    TestCaseModel.REVIEW, TestCaseModel.COMPLETED],
-                              description="Dropdown 2 description"),
-        ]
-    )
     def post(self, request, *args, **kwargs):
         return super(TestCaseView, self).post(request, *args, **kwargs)
 
@@ -63,3 +50,44 @@ class TestCaseDetailView(generics.RetrieveUpdateDestroyAPIView):
         response = super().get(request, *args, **kwargs)
         return Response({"success": True, "data": response.data})
 
+
+class GetExcel(generics.GenericAPIView):
+
+    serializer_class = ExcelSerializer
+
+    def post(self, request, *args, **kwargs):
+        file_uploaded = request.FILES.get("file")
+        wb = load_workbook(file_uploaded)
+        ws = wb.active
+        test_case = None
+        _data = dict()
+        _step_data = dict()
+        testcase_list = []
+        step_list = []
+        try:
+            for row in ws.iter_rows(min_row=2, values_only=True):
+                if row[0] is not None:
+                    jira_id_parts = row[0].split('-')
+                    _data = {
+                        "jira_id": jira_id_parts[-1],
+                        "jira_summary": row[1],
+                        "test_description": row[2],
+                        "test_name": "TestCase"
+                    }
+                    testcase_list.append(TestCaseModel(**_data))
+                    test_case = jira_id_parts[-1]
+                elif row[0] is None and row[5] is not None:
+                    _step_data = {
+                        "testcase_id": test_case,
+                        "step_id": int(row[5]),
+                        "step_description": row[6],
+                        "step_data": row[7],
+                        "excepted_result": row[8]
+                    }
+                    step_list.append(TestCaseStep(**_step_data))
+            with transaction.atomic():
+                TestCaseModel.objects.bulk_create(testcase_list)
+                TestCaseStep.objects.bulk_create(step_list)
+        except Exception as e:
+            return Response({str(e)})
+        return Response({"Test": _data, "step": _step_data})

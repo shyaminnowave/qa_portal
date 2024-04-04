@@ -7,13 +7,12 @@ from apps.testcase_app.models import TestCaseModel, TestCaseStep
 class TestCaseSerializerList(serializers.ModelSerializer):
 
     class Meta:
-        fields = ('jira_id', 'test_name', 'jira_summary', 'test_description', 'natcos',
+        fields = ('jira_id', 'test_name', 'jira_summary', 'test_description',
                   'status', 'automation_status')
         model = TestCaseModel
 
     def to_representation(self, instance):
         represent = super(TestCaseSerializerList, self).to_representation(instance)
-        represent['natcos'] = [x.natco for x in instance.natcos.all()]
         return represent
 
 
@@ -39,3 +38,8 @@ class TestCaseSerializer(serializers.ModelSerializer):
         if value and not re.match(r"^[a-zA-Z\S]+$", value):
             raise serializers.ValidationError("Test Name Cannot Contains Numbers")
         return value
+
+
+class ExcelSerializer(serializers.Serializer):
+
+    file = serializers.FileField()
