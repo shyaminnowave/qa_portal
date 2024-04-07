@@ -86,9 +86,9 @@ class NatcoStatus(TimeStampedModel):
     language = models.ForeignKey(Language, on_delete=models.CASCADE)
     test_case = models.ForeignKey(TestCaseModel, on_delete=models.CASCADE)
     device = models.ForeignKey(STBManufacture, on_delete=models.CASCADE)
-    # user = models.ForeignKey(User, on_delete=models.CASCADE)
-    # reviewed_by = models.ForeignKey(User, on_delete=models.CASCADE)
-    # modified = models.ForeignKey(User, on_delete=models.CASCADE)
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='user_natco')
+    reviewed_by = models.ForeignKey(User, on_delete=models.CASCADE, related_name='natco_reviewer')
+    modified = models.ForeignKey(User, on_delete=models.CASCADE, related_name='natoc_modified')
     history = HistoricalRecords()
 
     def __str__(self):

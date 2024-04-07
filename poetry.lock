@@ -83,6 +83,17 @@ asgiref = ">=3.6"
 Django = ">=3.2"
 
 [[package]]
+name = "django-dotenv"
+version = "1.4.2"
+description = "foreman reads from .env. manage.py doesn't. Let's fix that."
+optional = false
+python-versions = "*"
+files = [
+    {file = "django-dotenv-1.4.2.tar.gz", hash = "sha256:3812bb0f4876cf31f902aad140f0645e120e51ee30eb7c40c22050f58a0e4adb"},
+    {file = "django_dotenv-1.4.2-py2.py3-none-any.whl", hash = "sha256:a9b1b40a70bd321acd231926acedb9bd2c5e873e33a1873b34a7276d196a765e"},
+]
+
+[[package]]
 name = "django-extensions"
 version = "3.2.3"
 description = "Extensions for Django"
@@ -737,4 +748,4 @@ brotli = ["Brotli"]
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.10"
-content-hash = "2beb45c4297a79d899cf9189ec384495cb36a78e629cc1214d4572979a7e0db9"
+content-hash = "31be45cd5378648ad403e2b8e1b27d9c22cd2dc6ae2a824fb59cdc967389f69a"

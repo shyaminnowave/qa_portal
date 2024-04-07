@@ -12,6 +12,13 @@ from django.forms.models import model_to_dict
 from django.http import JsonResponse
 from drf_spectacular.utils import extend_schema, OpenApiParameter, OpenApiExample
 from drf_spectacular.types import OpenApiTypes
+from rest_framework.exceptions import APIException
+
+
+class ExcelErrorException(APIException):
+
+    default_detail = "Cannot Import Excel file. Please Check the Data"
+    default_code = "error"
 
 
 class TestCaseListView(generics.ListAPIView):
@@ -89,5 +96,5 @@ class GetExcel(generics.GenericAPIView):
                 TestCaseModel.objects.bulk_create(testcase_list)
                 TestCaseStep.objects.bulk_create(step_list)
         except Exception as e:
-            return Response({str(e)})
-        return Response({"Test": _data, "step": _step_data})
+            return Response({"success": False, "error": "Data Format Error"})
+        return Response({"success": True, "data": "TestCase Added Successfull"})
