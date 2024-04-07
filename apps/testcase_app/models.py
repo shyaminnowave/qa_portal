@@ -23,7 +23,7 @@ class TestCaseModel(TimeStampedModel):
     READY = 'ready'
     
     AUTOMATION_CHOICES = (
-        (NOT_AUTOMATABLE, 'Not-Automatable'), #automatable
+        (NOT_AUTOMATABLE, 'Not-Automatable'),  #automatable
         (IN_DEVELOPMENT, 'In-Development'),
         (REVIEW, 'Review'),
         (READY, 'Ready'),
@@ -86,9 +86,9 @@ class NatcoStatus(TimeStampedModel):
     language = models.ForeignKey(Language, on_delete=models.CASCADE)
     test_case = models.ForeignKey(TestCaseModel, on_delete=models.CASCADE)
     device = models.ForeignKey(STBManufacture, on_delete=models.CASCADE)
-    user = models.ForeignKey(User, on_delete=models.CASCADE)
-    reviewed_by = models.ForeignKey(User, on_delete=models.CASCADE)
-    modified = models.ForeignKey(User, on_delete=models.CASCADE)
+    # user = models.ForeignKey(User, on_delete=models.CASCADE)
+    # reviewed_by = models.ForeignKey(User, on_delete=models.CASCADE)
+    # modified = models.ForeignKey(User, on_delete=models.CASCADE)
     history = HistoricalRecords()
 
     def __str__(self):
