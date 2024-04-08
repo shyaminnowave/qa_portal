@@ -7,13 +7,9 @@ from apps.testcase_app.models import TestCaseModel, TestCaseStep
 class TestCaseSerializerList(serializers.ModelSerializer):
 
     class Meta:
+        model = TestCaseModel
         fields = ('jira_id', 'test_name', 'jira_summary', 'test_description',
                   'status', 'automation_status')
-        model = TestCaseModel
-
-    def to_representation(self, instance):
-        represent = super(TestCaseSerializerList, self).to_representation(instance)
-        return represent
 
 
 class TestStepSerializer(serializers.ModelSerializer):

@@ -5,7 +5,6 @@ from apps.testcase_app.apis.serializers import TestCaseSerializerList, TestCaseS
 from rest_framework.response import Response
 from django.shortcuts import get_object_or_404
 from apps.testcase_app.pagination import CustomPagination
-from rest_framework.filters import SearchFilter
 from openpyxl import load_workbook
 from django.db import transaction
 from django.forms.models import model_to_dict
@@ -13,6 +12,7 @@ from django.http import JsonResponse
 from drf_spectacular.utils import extend_schema, OpenApiParameter, OpenApiExample
 from drf_spectacular.types import OpenApiTypes
 from rest_framework.exceptions import APIException
+from django_filters import rest_framework as filters
 
 
 class ExcelErrorException(APIException):
@@ -28,10 +28,11 @@ class TestCaseListView(generics.ListAPIView):
     queryset = TestCaseModel.objects.all()
     serializer_class = TestCaseSerializerList
     pagination_class = CustomPagination
-    filter_backends = [SearchFilter]
-    search_fields = ['jira_id', 'test_name', 'status', 'automation_status']
+    filter_backends = [filters.DjangoFilterBackend]
+    filterset_fields = ('jira_id', 'test_name', 'status', 'automation_status')
 
     def get(self, request, *args, **kwargs):
+        queryset = self.filter_queryset(self.get_queryset())
         return super().list(request, *args, **kwargs)
 
 
