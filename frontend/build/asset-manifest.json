@@ -1,14 +1,14 @@
 {
   "files": {
-    "main.css": "/static/css/main.381c7ba3.css",
-    "main.js": "/static/js/main.26151758.js",
+    "main.css": "/static/css/main.144a29a4.css",
+    "main.js": "/static/js/main.57d875fe.js",
     "static/media/innowave_icon.png": "/static/media/innowave_icon.0f175a41a7db6d9f320e.png",
     "index.html": "/index.html",
-    "main.381c7ba3.css.map": "/static/css/main.381c7ba3.css.map",
-    "main.26151758.js.map": "/static/js/main.26151758.js.map"
+    "main.144a29a4.css.map": "/static/css/main.144a29a4.css.map",
+    "main.57d875fe.js.map": "/static/js/main.57d875fe.js.map"
   },
   "entrypoints": [
-    "static/css/main.381c7ba3.css",
-    "static/js/main.26151758.js"
+    "static/css/main.144a29a4.css",
+    "static/js/main.57d875fe.js"
   ]
 }
