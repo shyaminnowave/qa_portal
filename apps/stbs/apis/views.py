@@ -2,8 +2,9 @@ from rest_framework import generics
 from rest_framework.viewsets import ModelViewSet
 from apps.stbs.models import Language, STBManufacture, Natco, NactoManufactureLanguage
 from apps.stbs.apis.serializers import LanguageSerializer, STBManufactureSerializer, NactoSerializer, \
-    NatcoLanguageSerializer
+    NatcoLanguageSerializer, NatcoOptionSerializer, LanguageOptionSerializer, DeviceOptionSerializer
 from apps.testcase_app.pagination import CustomPagination
+from apps.stbs.mixins import OptionMixin
 
 
 class LanguageViewset(ModelViewSet):
@@ -35,3 +36,20 @@ class NatcoLanguageViewSet(ModelViewSet):
     queryset = NactoManufactureLanguage.objects.all()
     serializer_class = NatcoLanguageSerializer
     pagination_class = CustomPagination
+
+
+class NatcoOptionView(OptionMixin, generics.GenericAPIView):
+    queryset = Natco.objects.all()
+    serializer_class = NatcoOptionSerializer
+
+
+class LanguageOptionView(OptionMixin, generics.GenericAPIView):
+    queryset = Language.objects.all()
+    serializer_class = LanguageOptionSerializer
+
+
+class DeviceOptionView(OptionMixin, generics.GenericAPIView):
+    queryset = Natco.objects.all()
+    serializer_class = DeviceOptionSerializer
+
+

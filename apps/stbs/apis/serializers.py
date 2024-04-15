@@ -73,3 +73,27 @@ class NatcoLanguageSerializer(serializers.ModelSerializer):
     class Meta:
         fields = ('id', 'natco', 'device_name', 'language_name',)
         model = NactoManufactureLanguage
+
+
+class NatcoOptionSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = Natco
+        fields = ('natco',)
+
+
+class LanguageOptionSerializer(serializers.ModelSerializer):
+    value = serializers.IntegerField(source='id')
+    label = serializers.CharField(source='language_name')
+
+    class Meta:
+        model = Language
+        fields = ('language_name',)
+
+
+class DeviceOptionSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = STBManufacture
+        fields = ('device_name',)
+
