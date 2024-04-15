@@ -1,7 +1,7 @@
 import re
 
 from rest_framework import serializers
-from apps.testcase_app.models import TestCaseModel, TestCaseStep
+from apps.testcase_app.models import TestCaseModel, TestCaseStep, NatcoStatus
 
 
 class TestCaseSerializerList(serializers.ModelSerializer):
@@ -34,6 +34,21 @@ class TestCaseSerializer(serializers.ModelSerializer):
         if value and not re.match(r"^[a-zA-Z\S]+$", value):
             raise serializers.ValidationError("Test Name Cannot Contains Numbers")
         return value
+
+
+class NatcoStatusSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = NatcoStatus
+        fields = ('natco', 'language', 'device', 'test_case', 'status', 'applicable')
+
+    def to_representation(self, instance):
+        represent = super(NatcoStatusSerializer, self).to_representation(instance)
+        represent['natco'] = instance.natco.natco
+        represent['language'] = instance.language.language_name
+        represent['device'] = instance.device.name
+        represent['test_case'] = instance.test_case.test_name
+        return represent
 
 
 class ExcelSerializer(serializers.Serializer):

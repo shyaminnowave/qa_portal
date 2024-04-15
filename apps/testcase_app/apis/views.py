@@ -1,7 +1,8 @@
 from rest_framework.views import Response
 from rest_framework import generics
-from apps.testcase_app.models import TestCaseModel, TestCaseStep
-from apps.testcase_app.apis.serializers import TestCaseSerializerList, TestCaseSerializer, ExcelSerializer
+from apps.testcase_app.models import TestCaseModel, TestCaseStep, NatcoStatus
+from apps.testcase_app.apis.serializers import TestCaseSerializerList, TestCaseSerializer, ExcelSerializer, \
+        NatcoStatusSerializer
 from rest_framework.response import Response
 from django.shortcuts import get_object_or_404
 from apps.testcase_app.pagination import CustomPagination
@@ -57,6 +58,25 @@ class TestCaseDetailView(generics.RetrieveUpdateDestroyAPIView):
     def get(self, request, *args, **kwargs):
         response = super().get(request, *args, **kwargs)
         return Response({"success": True, "data": response.data})
+
+
+class TestCaseNatcoView(generics.ListAPIView):
+
+    serializer_class = NatcoStatusSerializer
+    model = NatcoStatus.objects.all()
+    lookup_field = 'jira_id'
+
+    def get_queryset(self):
+        queryset = NatcoStatus.objects.filter(test_case_id=self.kwargs.get('jira_id'))
+        return queryset
+
+
+class TestCaseNatcoList(generics.ListAPIView):
+
+    serializer_class = NatcoStatusSerializer
+    queryset = NatcoStatus.objects.all()
+    filter_backends = [filters.DjangoFilterBackend]
+    filterset_fields = ['natco', 'language', 'device']
 
 
 class GetExcel(generics.GenericAPIView):

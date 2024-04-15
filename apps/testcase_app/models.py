@@ -21,6 +21,10 @@ class TestCaseModel(TimeStampedModel):
     IN_DEVELOPMENT = 'in-development'
     REVIEW = 'review'
     READY = 'ready'
+
+    PERFORMANCE = 'performance'
+    SOAK = 'soak'
+    SMOKE = 'smoke'
     
     AUTOMATION_CHOICES = (
         (NOT_AUTOMATABLE, 'Not-Automatable'),  #automatable
@@ -36,10 +40,17 @@ class TestCaseModel(TimeStampedModel):
         (COMPLETED, 'Completed')
     )
 
+    TESTCASE_CHOICES = (
+        (PERFORMANCE, 'performance'),
+        (SOAK, 'soak'),
+        (SMOKE, 'smoke')
+    )
+
     jira_id = models.IntegerField(_("Jira Id"), primary_key=True, unique=True, help_text=("Jira Id"))
     test_name = models.CharField(_("Test Report Name"), max_length=255, help_text=("Please Enter the TestCase Name"))
     jira_summary = models.TextField(_("Jira Summary"))
     test_description = models.TextField(_("Test description"))
+    testcase_type = models.CharField(choices=TESTCASE_CHOICES, max_length=20, default=PERFORMANCE)
     comments = models.TextField(blank=True, null=True)
     defects = models.TextField(blank=True, null=True)
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default=ONGOING)
@@ -67,32 +78,54 @@ class TestCaseModel(TimeStampedModel):
         return 'TTVTM - %s' % self.jira_id
     
     def get_status(self) -> str:
-        return self.status
-
-    # @classmethod
-    # def create_historical_record(cls, instance, history_type, history_record=None, **kwargs):
-    #     history_record = super().create_historical_record(instance, history_record, **kwargs)
-    #     request_user = kwargs.get('history_user')
-    #     request_method = kwargs.get('request_method')
-    #     history_record.request_user = request_user.username if request_user else None
-    #     history_record.request_method = request_method
-    #     history_record.save()
-    #     return history_record
+        return '%s' % self.status
 
 
 class NatcoStatus(TimeStampedModel):
 
+    IN_DEVELOPMENT = 'in_development'
+    NOT_AUTOMATABLE = 'not_automatable'
+    MANUAL = 'manual'
+    COMPLETE = 'complete'
+    READY = 'READY'
+
+    STATUS_CHOICES = (
+        (IN_DEVELOPMENT, 'IN Development'),
+        (NOT_AUTOMATABLE, 'Not Automatable'),
+        (MANUAL, 'Manual'),
+        (COMPLETE, 'Complete'),
+        (READY, 'Ready')
+    )
+
     natco = models.ForeignKey(Natco, on_delete=models.CASCADE, related_name='natco_status')
     language = models.ForeignKey(Language, on_delete=models.CASCADE)
-    test_case = models.ForeignKey(TestCaseModel, on_delete=models.CASCADE)
     device = models.ForeignKey(STBManufacture, on_delete=models.CASCADE)
-    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='user_natco')
-    reviewed_by = models.ForeignKey(User, on_delete=models.CASCADE, related_name='natco_reviewer')
-    modified = models.ForeignKey(User, on_delete=models.CASCADE, related_name='natoc_modified')
+    test_case = models.ForeignKey(TestCaseModel, on_delete=models.CASCADE)
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default=MANUAL)
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='user_natco', blank=True, null=True)
+    reviewed_by = models.ForeignKey(User, on_delete=models.CASCADE, related_name='natco_reviewer', blank=True, null=True)
+    modified = models.ForeignKey(User, on_delete=models.CASCADE, related_name='natoc_modified', blank=True, null=True)
+    applicable = models.BooleanField(default=True)
     history = HistoricalRecords()
 
+    class Meta:
+        verbose_name = 'Natco Status'
+        verbose_name_plural = 'Natco Status'
+
     def __str__(self):
-        return self.natco.natco
+        return '%s' % self.test_case
+
+    def save(self, **kwargs):
+        status = self.status
+        test_case = TestCaseModel.objects.get(jira_id=self.test_case.jira_id)
+        if status == 'in_development':
+            test_case.automation_status = 'in-development'
+        elif status == 'review':
+            test_case.automation_status = 'review'
+        elif status == 'ready':
+            test_case.automation_status = 'ready'
+        test_case.save()
+        super(NatcoStatus, self).save(**kwargs)
 
 
 class TestCaseStep(TimeStampedModel):
@@ -116,17 +149,4 @@ class TestCaseStep(TimeStampedModel):
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default=TODO)
     history = HistoricalRecords()
 
-    # @classmethod
-    # def create_historical_record(cls, instance, history_type, history_record=None, **kwargs):
-    #     history_record = super().create_historical_record(instance, history_record, **kwargs)
-    #     request_user = kwargs.get('history_user')
-    #     request_method = kwargs.get('request_method')
-    #     history_record.request_user = request_user.username if request_user else None
-    #     history_record.request_method = request_method
-    #     history_record.save()
-    #     return history_record
-
-    # def __str__(self):
-    #     return '%s - %s' % (self.testcase.test_name, self.step_id)
-    
 

@@ -6,5 +6,7 @@ urlpatterns = [
     path('test-case/', views.TestCaseListView.as_view()),
     path('create/test-case/', views.TestCaseView.as_view()),
     path('test-case/<int:jira_id>/', views.TestCaseDetailView.as_view()),
+    path('test-case/natco/<int:jira_id>/', views.TestCaseNatcoView.as_view()),
+    path('natco/', views.TestCaseNatcoList.as_view()),
     path('bulk-upload/', views.GetExcel.as_view())
 ]

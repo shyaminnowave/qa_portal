@@ -1,5 +1,5 @@
 from django.contrib import admin
-from apps.testcase_app.models import TestCaseModel, TestCaseStep
+from apps.testcase_app.models import TestCaseModel, TestCaseStep, NatcoStatus
 from simple_history.admin import SimpleHistoryAdmin
 
 # Register your models here.
@@ -17,3 +17,4 @@ class TestCaseModelAdmin(SimpleHistoryAdmin):
 
 
 admin.site.register(TestCaseModel, TestCaseModelAdmin)
+admin.site.register(NatcoStatus)
