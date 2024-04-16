@@ -49,7 +49,7 @@ class LanguageOptionView(OptionMixin, generics.GenericAPIView):
 
 
 class DeviceOptionView(OptionMixin, generics.GenericAPIView):
-    queryset = Natco.objects.all()
+    queryset = STBManufacture.objects.all()
     serializer_class = DeviceOptionSerializer
 
 
