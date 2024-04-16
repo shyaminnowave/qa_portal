@@ -7,9 +7,22 @@ from django.utils.translation import gettext_lazy as _
 from rest_framework import status
 from apps.account.utils import generate_user
 from django.core.exceptions import ValidationError
+from rest_framework.fields import CharField
+from apps.account.fields import CompanyEmailValidator
 import re
 
 User = get_user_model()
+
+
+class CompanyMail(CharField):
+    default_error_messages = {
+        'invalid': _('Enter a valid email address.')
+    }
+
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        validator = CompanyEmailValidator(message=self.error_messages['invalid'])
+        self.validators.append(validator)
 
 
 class CustomValidation(serializers.ValidationError):
@@ -29,7 +42,7 @@ class EmailExistValidation(serializers.ValidationError):
 
 class AccountSerializer(serializers.ModelSerializer):
 
-    email = serializers.EmailField(required=True, max_length=30)
+    email = CompanyMail(required=True, max_length=30)
     fullname = serializers.CharField(required=True, max_length=30)
     password = serializers.CharField(required=True, max_length=20)
     confirm_password = serializers.CharField(required=True, max_length=20, write_only=True)

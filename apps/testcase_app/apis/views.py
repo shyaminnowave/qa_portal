@@ -65,6 +65,7 @@ class TestCaseNatcoView(generics.ListAPIView):
     serializer_class = NatcoStatusSerializer
     model = NatcoStatus.objects.all()
     lookup_field = 'jira_id'
+    pagination_class = CustomPagination
 
     def get_queryset(self):
         queryset = NatcoStatus.objects.filter(test_case_id=self.kwargs.get('jira_id'))
@@ -77,6 +78,7 @@ class TestCaseNatcoList(generics.ListAPIView):
     queryset = NatcoStatus.objects.all()
     filter_backends = [filters.DjangoFilterBackend]
     filterset_fields = ['natco', 'language', 'device']
+    pagination_class = CustomPagination
 
 
 class GetExcel(generics.GenericAPIView):
