@@ -3,6 +3,7 @@ from rest_framework import generics
 from apps.testcase_app.models import TestCaseModel, TestCaseStep, NatcoStatus
 from apps.testcase_app.apis.serializers import TestCaseSerializerList, TestCaseSerializer, ExcelSerializer, \
         NatcoStatusSerializer
+from apps.stbs.models import NactoManufactureLanguage
 from rest_framework.response import Response
 from django.shortcuts import get_object_or_404
 from apps.testcase_app.pagination import CustomPagination
@@ -14,6 +15,7 @@ from drf_spectacular.utils import extend_schema, OpenApiParameter, OpenApiExampl
 from drf_spectacular.types import OpenApiTypes
 from rest_framework.exceptions import APIException
 from django_filters import rest_framework as filters
+from apps.testcase_app.filters import NatcoStatusFilter
 
 
 class ExcelErrorException(APIException):
@@ -76,9 +78,22 @@ class TestCaseNatcoList(generics.ListAPIView):
 
     serializer_class = NatcoStatusSerializer
     queryset = NatcoStatus.objects.all()
-    filter_backends = [filters.DjangoFilterBackend]
-    filterset_fields = ['natco', 'language', 'device']
+    filter_class = NatcoStatusFilter
     pagination_class = CustomPagination
+    pagination_class.page_size = 20
+
+    def list(self, request, *args, **kwargs):
+        data = self.get_queryset()
+        filter_set = self.filter_class(request.GET, self.get_queryset())
+        if filter_set.is_valid():
+            data = filter_set.qs
+        paginated_data = self.paginate_queryset(data)
+        serializer = self.get_serializer(paginated_data, many=True)
+        try:
+            if serializer:
+                return self.get_paginated_response(serializer.data)
+        except Exception as e:
+            return Response({"success": False, "data": str(e)})
 
 
 class GetExcel(generics.GenericAPIView):
@@ -94,6 +109,8 @@ class GetExcel(generics.GenericAPIView):
         _step_data = dict()
         testcase_list = []
         step_list = []
+        natco_list = []
+        natco = NactoManufactureLanguage.objects.all()
         try:
             for row in ws.iter_rows(min_row=2, values_only=True):
                 if row[0] is not None:
@@ -106,6 +123,9 @@ class GetExcel(generics.GenericAPIView):
                     }
                     testcase_list.append(TestCaseModel(**_data))
                     test_case = jira_id_parts[-1]
+                    for data in natco:
+                        natco_list.append(NatcoStatus(natco=data.natco, language=data.language_name,
+                                                      device=data.device_name, test_case_id=test_case))
                 elif row[0] is None and row[5] is not None:
                     _step_data = {
                         "testcase_id": test_case,
@@ -118,6 +138,7 @@ class GetExcel(generics.GenericAPIView):
             with transaction.atomic():
                 TestCaseModel.objects.bulk_create(testcase_list)
                 TestCaseStep.objects.bulk_create(step_list)
+                NatcoStatus.objects.bulk_create(natco_list)
         except Exception as e:
             return Response({"success": False, "error": "Data Format Error"})
         return Response({"success": True, "data": "TestCase Added Successfull"})
