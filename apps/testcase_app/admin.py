@@ -16,5 +16,10 @@ class TestCaseModelAdmin(SimpleHistoryAdmin):
     inlines = [TestStepAdmin]
 
 
+class NatcoStatusAdmin(SimpleHistoryAdmin):
+
+    list_display = ['test_case', 'language', 'device', 'status']
+
+
 admin.site.register(TestCaseModel, TestCaseModelAdmin)
-admin.site.register(NatcoStatus)
+admin.site.register(NatcoStatus, NatcoStatusAdmin)
