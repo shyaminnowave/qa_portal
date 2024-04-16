@@ -83,8 +83,6 @@ class NatcoOptionSerializer(serializers.ModelSerializer):
 
 
 class LanguageOptionSerializer(serializers.ModelSerializer):
-    value = serializers.IntegerField(source='id')
-    label = serializers.CharField(source='language_name')
 
     class Meta:
         model = Language
@@ -95,5 +93,5 @@ class DeviceOptionSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = STBManufacture
-        fields = ('device_name',)
+        fields = ('name',)
 
