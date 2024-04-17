@@ -11,31 +11,32 @@ from rest_framework import status
 User = get_user_model()
 
 
-class TestUser(TestCase):
+@pytest.mark.django_db
+class TestUser:
 
     def test_create_user(self):
         user = User.objects.create_user(
-            username='testuser',
-            email='test@example.com',
-            password='password123'
+            username="test_name",
+            email="test@innowave.tech",
+            password="password@123"
         )
-        self.assertEqual(user.username, 'testuser')
-        self.assertEqual(user.email, 'test@example.com')
-        self.assertTrue(user.is_active)
-        self.assertFalse(user.is_staff)
-        self.assertFalse(user.is_superuser)
+        assert user.email == 'test@innowave.tech'
+        assert user.username == 'test_name'
+        assert user.is_active
+        assert not user.is_staff
+        assert not user.is_superuser
 
-    def test_create_superuser(self):
+    def test_super_user(self):
         admin_user = User.objects.create_superuser(
-            username='admin',
-            email='admin@example.com',
-            password='admin123'
-        )
-        self.assertEqual(admin_user.username, 'admin')
-        self.assertEqual(admin_user.email, 'admin@example.com')
-        self.assertTrue(admin_user.is_active)
-        self.assertTrue(admin_user.is_staff)
-        self.assertTrue(admin_user.is_superuser)
+                    username='admin',
+                    email='test@innowave.tech',
+                    password='admin123'
+                )
+        assert admin_user.email == 'test@innowave.tech'
+        assert admin_user.username == 'admin'
+        assert admin_user.is_staff
+        assert admin_user.is_active
+        assert admin_user.is_superuser
 
 
 class TestLoginView(TestCase):
@@ -43,17 +44,26 @@ class TestLoginView(TestCase):
     def setUp(self):
         self.client = APIClient()
         self.user_data = {
-            'email': 'test1@gmail.com',
+            'email': 'test1@innowave.tech ',
             'fullname': 'shyamkumar',
             'password': 'shyamkumar',
             'confirm_password': 'shyamkumar'
         }
         self.url = reverse('create-user')
-    
+
     def test_create_user(self):
         response = self.client.post(self.url, self.user_data)
-        print("Test", response.data)
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+
+    def test_create_wrong_user(self):
+        _data = {
+            'email': 'test1@gmail.in ',
+            'fullname': 'shyamkumar',
+            'password': 'shyamkumar',
+            'confirm_password': 'shyamkumar'
+        }
+        response = self.client.post(self.url, _data)
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
     def test_login_user(self):
         user = User.objects.create_user(email='tets@gmail.com',
@@ -71,7 +81,7 @@ class TestLoginView(TestCase):
         user = User.objects.create_user(email='tets@gmail.com',
                                         username='test',
                                         password='shyamkumar')
-        
+
         self._url = reverse('login')
         self.data = {
             'email': 'tets@gmail.com',

@@ -80,7 +80,6 @@ class TestCaseNatcoList(generics.ListAPIView):
     queryset = NatcoStatus.objects.all()
     filter_class = NatcoStatusFilter
     pagination_class = CustomPagination
-    pagination_class.page_size = 20
 
     def list(self, request, *args, **kwargs):
         data = self.get_queryset()

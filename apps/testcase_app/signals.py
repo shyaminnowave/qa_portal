@@ -10,15 +10,13 @@ from django.shortcuts import get_object_or_404
 def save_natco_status(sender, instance, created, **kwargs):
     _data = []
     natco = NactoManufactureLanguage.objects.all()
-    testcase_instance = get_object_or_404(TestCaseModel, pk=instance.jira_id)
-    if testcase_instance is None:
-        for data in natco:
-            _data.append(NatcoStatus(natco=data.natco, language=data.language_name, device=data.device_name,
+    for data in natco:
+        _data.append(NatcoStatus(natco=data.natco, language=data.language_name, device=data.device_name,
                                      test_case=instance))
-        try:
-            with transaction.atomic():
-                NatcoStatus.objects.bulk_create(_data)
-        except Exception as e:
-            print(e)
+    try:
+        with transaction.atomic():
+            NatcoStatus.objects.bulk_create(_data)
+    except Exception as e:
+        print(e)
 
 

@@ -100,7 +100,7 @@ class NatcoStatus(TimeStampedModel):
     natco = models.ForeignKey(Natco, on_delete=models.CASCADE, related_name='natco_status')
     language = models.ForeignKey(Language, on_delete=models.CASCADE)
     device = models.ForeignKey(STBManufacture, on_delete=models.CASCADE)
-    test_case = models.ForeignKey(TestCaseModel, on_delete=models.CASCADE)
+    test_case = models.ForeignKey(TestCaseModel, on_delete=models.CASCADE, related_name='natco_status')
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default=MANUAL)
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='user_natco', blank=True, null=True)
     reviewed_by = models.ForeignKey(User, on_delete=models.CASCADE, related_name='natco_reviewer', blank=True, null=True)

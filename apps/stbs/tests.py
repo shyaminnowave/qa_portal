@@ -23,6 +23,7 @@ class TestLanguageModel(TestCase):
         self.assertEqual(str(python), "Python")
         self.assertEqual(str(javascript), "JavaScript")
 
+
 class TestLanguageSerializer(TestCase):
     def setUp(self):
         self.data = {
