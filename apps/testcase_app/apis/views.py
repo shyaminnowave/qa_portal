@@ -11,8 +11,8 @@ from openpyxl import load_workbook
 from django.db import transaction
 from django.forms.models import model_to_dict
 from django.http import JsonResponse
-from drf_spectacular.utils import extend_schema, OpenApiParameter, OpenApiExample
-from drf_spectacular.types import OpenApiTypes
+from drf_spectacular.utils import extend_schema, OpenApiParameter, OpenApiSchemaBase
+from drf_spectacular.openapi import OpenApiTypes, OpenApiExample
 from rest_framework.exceptions import APIException
 from django_filters import rest_framework as filters
 from apps.testcase_app.filters import NatcoStatusFilter
@@ -78,12 +78,22 @@ class TestCaseNatcoList(generics.ListAPIView):
 
     serializer_class = NatcoStatusSerializer
     queryset = NatcoStatus.objects.all()
-    filter_class = NatcoStatusFilter
+    filterset_class = NatcoStatusFilter
     pagination_class = CustomPagination
 
+    @extend_schema(
+        parameters=[
+            OpenApiParameter(name='Natco', description="Enter the Natco", required=False, type=OpenApiTypes.STR,
+                             location=OpenApiParameter.QUERY),
+            OpenApiParameter(name='language', description="Enter the Language", required=False, type=OpenApiTypes.STR,
+                             location=OpenApiParameter.QUERY),
+            OpenApiParameter(name='device', description="Enter the Device", required=False, type=OpenApiTypes.STR,
+                             location=OpenApiParameter.QUERY),
+        ]
+    )
     def list(self, request, *args, **kwargs):
         data = self.get_queryset()
-        filter_set = self.filter_class(request.GET, self.get_queryset())
+        filter_set = self.filterset_class(request.GET, self.get_queryset())
         if filter_set.is_valid():
             data = filter_set.qs
         paginated_data = self.paginate_queryset(data)

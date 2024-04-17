@@ -5,6 +5,8 @@ from apps.stbs.apis.serializers import LanguageSerializer, STBManufactureSeriali
     NatcoLanguageSerializer, NatcoOptionSerializer, LanguageOptionSerializer, DeviceOptionSerializer
 from apps.testcase_app.pagination import CustomPagination
 from apps.stbs.mixins import OptionMixin
+from drf_spectacular.utils import extend_schema, OpenApiParameter, OpenApiSchemaBase
+from drf_spectacular.openapi import OpenApiTypes, OpenApiExample
 
 
 class LanguageViewset(ModelViewSet):
@@ -13,11 +15,15 @@ class LanguageViewset(ModelViewSet):
     serializer_class = LanguageSerializer
     pagination_class = CustomPagination
 
+    @extend_schema(
+        request=LanguageSerializer,
+        responses={201, LanguageSerializer}
+    )
     def create(self, request, *args, **kwargs):
         return super().create(request, *args, **kwargs)
 
 
-class STBManufactureViewset(ModelViewSet):
+class STBManufactureViewSet(ModelViewSet):
 
     queryset = STBManufacture.objects.all()
     serializer_class = STBManufactureSerializer
@@ -36,6 +42,9 @@ class NatcoLanguageViewSet(ModelViewSet):
     queryset = NactoManufactureLanguage.objects.all()
     serializer_class = NatcoLanguageSerializer
     pagination_class = CustomPagination
+
+    def create(self, request, *args, **kwargs):
+        return super(NatcoLanguageViewSet, self).create()
 
 
 class NatcoOptionView(OptionMixin, generics.GenericAPIView):
