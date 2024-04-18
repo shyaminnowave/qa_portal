@@ -54,7 +54,12 @@ class AccountSerializer(serializers.ModelSerializer):
     def validate_email(self, value):
         if value is None:
             raise CustomValidation({'email': "Email Field is should not be empty"})
-        return value
+        elif value:
+            user_part, doamin_part = value.rsplit('@', 1)
+            host, domain = doamin_part.rsplit('.', 1)
+            if host == 'innowave' and domain == 'tech':
+                return value
+            raise CustomValidation({"email": "Please Enter you Innowave Mail"})
 
     def validate(self, attrs):
         password = attrs.get('password')

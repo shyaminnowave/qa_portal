@@ -8,7 +8,7 @@ class TestCaseSerializerList(serializers.ModelSerializer):
 
     class Meta:
         model = TestCaseModel
-        fields = ('jira_id', 'test_name', 'test_description', 'testcase_type',
+        fields = ('jira_id', 'test_name', 'test_description', 'testcase_type', 'jira_summary',
                   'status', 'automation_status')
 
 
