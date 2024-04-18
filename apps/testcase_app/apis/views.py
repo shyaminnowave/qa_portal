@@ -86,9 +86,11 @@ class TestCaseNatcoList(generics.ListAPIView):
         parameters=[
             OpenApiParameter(name='Natco', description="Enter the Natco", required=False, type=OpenApiTypes.STR,
                              location=OpenApiParameter.QUERY),
-            OpenApiParameter(name='language', description="Enter the Language", required=False, type=OpenApiTypes.STR,
+            OpenApiParameter(name='Language', description="Enter the Language", required=False, type=OpenApiTypes.STR,
                              location=OpenApiParameter.QUERY),
-            OpenApiParameter(name='device', description="Enter the Device", required=False, type=OpenApiTypes.STR,
+            OpenApiParameter(name='Device', description="Enter the Device", required=False, type=OpenApiTypes.STR,
+                             location=OpenApiParameter.QUERY),
+            OpenApiParameter(name='Jira Id', description="Enter the Jira ID", required=False, type=OpenApiTypes.STR,
                              location=OpenApiParameter.QUERY),
         ]
     )
