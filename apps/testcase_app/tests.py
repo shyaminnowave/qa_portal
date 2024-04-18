@@ -4,6 +4,7 @@ from apps.testcase_app.models import TestCaseModel, NatcoStatus
 from apps.stbs.models import STBManufacture, Language, Natco, NactoManufactureLanguage
 from rest_framework.test import APIClient
 from django.urls import reverse
+from apps.testcase_app.models import NatcoStatus
 from rest_framework import status
 # Create your tests here.
 
@@ -94,12 +95,27 @@ class TestNatcoStatus:
             script_name="TestScript",
             script="ScriptContent"
         )
+        self._url = reverse('natco-list')
 
     def test_view_data(self):
         self._url = reverse('natco-list')
         self.response = self.client.get(self._url)
         response_data = self.response.json()
         assert response_data['count'] == 1
+
+    def test_natco_status_update(self):
+        _data = {
+            "status": NatcoStatus.IN_DEVELOPMENT,
+            "applicable": "False"
+        }
+        natco = NatcoStatus.objects.get(id=1)
+        self._url = reverse('natco-details', kwargs={'pk': natco.id})
+        self.response = self.client.patch(self._url, _data)
+        self.testcase_instance = TestCaseModel.objects.get(jira_id=self.test_case.jira_id)
+        response_data = self.response.json()
+        assert self.testcase_instance.automation_status == 'in-development'
+        assert response_data['success'] == True
+        assert response_data['data']['status'] == "in_development"
 
 
 

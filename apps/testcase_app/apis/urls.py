@@ -8,6 +8,6 @@ urlpatterns = [
     path('test-case/<int:jira_id>/', views.TestCaseDetailView.as_view()),
     path('test-case/natco/<int:jira_id>/', views.TestCaseNatcoView.as_view(), name='testcase-natco'),
     path('natco/', views.TestCaseNatcoList.as_view(), name='natco-list'),
-    path('test/natco/<int:pk>/', views.TestCaseNatcoDetail.as_view()),
+    path('test/natco/<int:pk>/', views.TestCaseNatcoDetail.as_view(), name='natco-details'),
     path('bulk-upload/', views.GetExcel.as_view())
 ]
