@@ -92,6 +92,8 @@ class TestCaseNatcoList(generics.ListAPIView):
                              location=OpenApiParameter.QUERY),
             OpenApiParameter(name='Jira Id', description="Enter the Jira ID", required=False, type=OpenApiTypes.STR,
                              location=OpenApiParameter.QUERY),
+            OpenApiParameter(name='Applicable', description="Enter the Applicable", required=False, type=OpenApiTypes.BOOL,
+                             location=OpenApiParameter.QUERY),
         ]
     )
     def list(self, request, *args, **kwargs):
