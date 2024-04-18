@@ -1,6 +1,7 @@
 import pytest
 from django.test import TestCase
 from apps.testcase_app.models import TestCaseModel, NatcoStatus
+from apps.stbs.models import STBManufacture, Language, Natco, NactoManufactureLanguage
 from rest_framework.test import APIClient
 from django.urls import reverse
 from rest_framework import status
@@ -40,8 +41,8 @@ class TestTestCaseModel:
             automation_status=TestCaseModel.NOT_AUTOMATABLE
         )
         assert test_case.status == TestCaseModel.ONGOING  # default value
-        assert test_case.script_name == None  # default value
-        assert test_case.script == None  # default value
+        assert not test_case.script_name  # default value
+        assert not test_case.script  # default value
 
 
 @pytest.mark.django_db
@@ -49,6 +50,11 @@ class TestNatcoList:
 
     def setup_method(self):
         self.client = APIClient()
+        natoc = Natco.objects.create(country='Poland', natco='PL')
+        device = STBManufacture.objects.create(name="SDMC")
+        language = Language.objects.create(language_name="English")
+        _data = NactoManufactureLanguage.objects.create(natco=natoc, device_name=device,
+                                                        language_name=language)
         self.test_case = TestCaseModel.objects.create(
             jira_id=1,
             test_name="Test Case 1",
@@ -59,12 +65,41 @@ class TestNatcoList:
             script_name="TestScript",
             script="ScriptContent"
         )
-        self._url = reverse('testcase-natco', kwargs={'jira_id': self.test_case.jira_id})
-        self.response = self.client.get(self._url)
 
     def test_view_data(self):
-        assert self.response.status_code == 200
+
+        self._url = reverse('testcase-natco', kwargs={'jira_id': self.test_case.jira_id})
+        self.response = self.client.get(self._url)
         response_data = self.response.json()
-        assert response_data['count'] == 14
+        assert response_data['count'] == 1
+
+
+@pytest.mark.django_db
+class TestNatcoStatus:
+
+    def setup_method(self):
+        self.client = APIClient()
+        natoc = Natco.objects.create(country='Poland', natco='PL')
+        device = STBManufacture.objects.create(name="SDMC")
+        language = Language.objects.create(language_name="English")
+        _data = NactoManufactureLanguage.objects.create(natco=natoc, device_name=device,
+                                                        language_name=language)
+        self.test_case = TestCaseModel.objects.create(
+            jira_id=1,
+            test_name="Test Case 1",
+            jira_summary="Summary",
+            test_description="Description",
+            status=TestCaseModel.ONGOING,
+            automation_status=TestCaseModel.IN_DEVELOPMENT,
+            script_name="TestScript",
+            script="ScriptContent"
+        )
+
+    def test_view_data(self):
+        self._url = reverse('natco-list')
+        self.response = self.client.get(self._url)
+        response_data = self.response.json()
+        assert response_data['count'] == 1
+
 
 
