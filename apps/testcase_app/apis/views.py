@@ -94,6 +94,9 @@ class TestCaseNatcoList(generics.ListAPIView):
                              location=OpenApiParameter.QUERY),
             OpenApiParameter(name='Applicable', description="Enter the Applicable", required=False, type=OpenApiTypes.BOOL,
                              location=OpenApiParameter.QUERY),
+            OpenApiParameter(name='status', description="Choose a Status", required=False,
+                             type=OpenApiTypes.STR,
+                             location=OpenApiParameter.QUERY, enum=NatcoStatus.STATUS_CHOICES),
         ]
     )
     def list(self, request, *args, **kwargs):
