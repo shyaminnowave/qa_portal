@@ -26,7 +26,7 @@ class NatcoStatusSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = NatcoStatus
-        fields = ('natco', 'language', 'jira_id', 'jira_summary', 'device', 'test_case', 'status', 'applicable')
+        fields = ('id', 'natco', 'language', 'jira_id', 'jira_summary', 'device', 'test_case', 'status', 'applicable')
 
     def to_representation(self, instance):
         represent = super(NatcoStatusSerializer, self).to_representation(instance)

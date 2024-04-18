@@ -16,6 +16,7 @@ from drf_spectacular.openapi import OpenApiTypes, OpenApiExample
 from rest_framework.exceptions import APIException
 from django_filters import rest_framework as filters
 from apps.testcase_app.filters import NatcoStatusFilter
+from rest_framework import status
 
 
 class ExcelErrorException(APIException):
@@ -103,6 +104,19 @@ class TestCaseNatcoList(generics.ListAPIView):
                 return self.get_paginated_response(serializer.data)
         except Exception as e:
             return Response({"success": False, "data": str(e)})
+
+
+class TestCaseNatcoDetail(generics.RetrieveUpdateDestroyAPIView):
+
+    serializer_class = NatcoStatusSerializer
+    queryset = NatcoStatus.objects.all()
+    lookup_field = 'pk'
+    
+    def patch(self, request, *args, **kwargs):
+        response = super(TestCaseNatcoDetail, self).patch(request, *args, **kwargs)
+        if response.status_code == status.HTTP_200_OK:
+            return Response({'success': True, "data": response.data})
+        return Response({"success": False, "error": "Field Not Updated"})
 
 
 class GetExcel(generics.GenericAPIView):
