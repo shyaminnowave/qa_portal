@@ -62,6 +62,7 @@ class TestCaseModel(TimeStampedModel):
     class Meta:
         verbose_name = 'TestCase'
         verbose_name_plural = 'TestCases'
+        ordering = ['-jira_id',]
 
     @property
     def _history_user(self):
