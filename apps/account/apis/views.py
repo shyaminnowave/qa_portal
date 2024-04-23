@@ -1,7 +1,8 @@
 from rest_framework.views import Response
 from rest_framework import generics
 from apps.account.models import Account
-from apps.account.apis.serializers import AccountSerializer, LoginSerializer, ProfileSerializer, UserListSerializer
+from apps.account.apis.serializers import AccountSerializer, LoginSerializer, ProfileSerializer, UserListSerializer, \
+                                UsernameSerializer
 from django.contrib.auth import authenticate
 from rest_framework import status
 from apps.account.utils import get_token_for_user
@@ -53,7 +54,6 @@ class LoginView(generics.GenericAPIView):
                 'access': token['access'],
                 'refresh': token['refresh'],
                 'email': user.email,
-                'username': user.username
             }
         return None
     
@@ -92,3 +92,11 @@ class UserListView(generics.ListAPIView):
     queryset = Account.objects.all()
     serializer_class = UserListSerializer
     pagination_class = CustomPagination
+
+
+class LoginUser(generics.GenericAPIView):
+
+    def get(self, request, *args, **kwargs):
+        queryset = Account.objects.get(email=request.user)
+        serializer = UsernameSerializer(queryset)
+        return Response({"success": serializer.data})

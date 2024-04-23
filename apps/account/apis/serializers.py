@@ -109,6 +109,13 @@ class ProfileSerializer(serializers.ModelSerializer):
         fields = ['fullname', 'email', 'groups']
 
 
+class UsernameSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = Account
+        fields = ('username',)
+
+
 class UserListSerializer(serializers.ModelSerializer):
 
     class Meta:
