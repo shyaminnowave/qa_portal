@@ -54,6 +54,7 @@ class LoginView(generics.GenericAPIView):
                 'access': token['access'],
                 'refresh': token['refresh'],
                 'email': user.email,
+                'username': user.username
             }
         return None
     
@@ -93,10 +94,3 @@ class UserListView(generics.ListAPIView):
     serializer_class = UserListSerializer
     pagination_class = CustomPagination
 
-
-class LoginUser(generics.GenericAPIView):
-
-    def get(self, request, *args, **kwargs):
-        queryset = Account.objects.get(email=request.user)
-        serializer = UsernameSerializer(queryset)
-        return Response({"success": serializer.data})
