@@ -52,7 +52,8 @@ class LoginView(generics.GenericAPIView):
             return {
                 'access': token['access'],
                 'refresh': token['refresh'],
-                'email': user.email
+                'email': user.email,
+                'username': user.username
             }
         return None
     
