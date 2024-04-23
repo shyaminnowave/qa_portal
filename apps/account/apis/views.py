@@ -1,7 +1,7 @@
 from rest_framework.views import Response
 from rest_framework import generics
 from apps.account.models import Account
-from apps.account.apis.serializers import AccountSerializer, LoginSerializer
+from apps.account.apis.serializers import AccountSerializer, LoginSerializer, ProfileSerializer, UserListSerializer
 from django.contrib.auth import authenticate
 from rest_framework import status
 from apps.account.utils import get_token_for_user
@@ -11,6 +11,7 @@ from rest_framework_simplejwt.authentication import JWTAuthentication
 from apps.account.signals import user_token_login, user_token_logout
 from drf_spectacular.utils import extend_schema, OpenApiParameter, OpenApiExample, extend_schema_view
 from drf_spectacular.types import OpenApiTypes
+from apps.testcase_app.apis.views import CustomPagination
 
 
 class AccountCreateView(generics.CreateAPIView):
@@ -68,3 +69,25 @@ class LogoutView(APIView):
                 return Response({"success": True, "data": "Logout Successfull"}, status=status.HTTP_205_RESET_CONTENT)
         except Exception as e:
             return Response({"success": False, "data": "Error"}, status=status.HTTP_400_BAD_REQUEST)
+
+
+class UserProfileView(generics.GenericAPIView):
+
+    queryset = Account.objects.all()
+    serializer_class = ProfileSerializer
+    lookup_field = 'username'
+
+    def get(self, request, *args, **kwargs):
+        serializer = self.get_serializer(self.get_object())
+        return Response({"success": True, "data": serializer.data})
+
+    def patch(self, request, *args, **kwargs):
+        """ Pending """
+        pass
+
+
+class UserListView(generics.ListAPIView):
+
+    queryset = Account.objects.all()
+    serializer_class = UserListSerializer
+    pagination_class = CustomPagination

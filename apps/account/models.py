@@ -1,3 +1,4 @@
+import re
 from django.db import models
 from django_extensions.db.models import TimeStampedModel
 from django.contrib.auth.models import AbstractBaseUser, PermissionsMixin, AbstractUser, UserManager
@@ -5,7 +6,18 @@ from django.contrib.auth.validators import UnicodeUsernameValidator
 from django.core.validators import validate_email
 from django.utils.translation import gettext_lazy as _
 from django.utils import timezone
+from django.core.validators import EmailValidator, ValidationError
+from apps.account.managers import CustomUserManager
+from apps.account.fields import CompanyEmail
 # Create your models here.contrib.
+
+
+class IntTechEmailValidator(EmailValidator):
+    def __call__(self, value):
+        super().__call__(value)
+        print("True")
+        if not value.endswith('@int.tech'):
+            raise ValidationError(_('Email domain must be int.tech'))
 
 
 class Account(AbstractBaseUser, PermissionsMixin, TimeStampedModel):
@@ -20,7 +32,6 @@ class Account(AbstractBaseUser, PermissionsMixin, TimeStampedModel):
         error_messages={
             'unique': _("A user with this EmailId already Exists")
         }
-
     )
     username = models.CharField(_('username'), max_length=30, validators=[username_validator])
     fullname = models.CharField(_('fullname'), max_length=30)
@@ -32,11 +43,9 @@ class Account(AbstractBaseUser, PermissionsMixin, TimeStampedModel):
             'Unselect this instead of deleting accounts.'
         ),
     )
-
     date_joined = models.DateTimeField(_('date joined'), default=timezone.now)
 
-    objects = UserManager()
-
+    objects = CustomUserManager()
     USERNAME_FIELD = 'email'
     REQUIRED_FIELDS = ['username']
 

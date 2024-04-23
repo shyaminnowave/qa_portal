@@ -10,6 +10,7 @@ from django.core.exceptions import ValidationError
 from rest_framework.fields import CharField
 from apps.account.fields import CompanyEmailValidator
 import re
+from django.contrib.auth.models import Group, PermissionsMixin
 
 User = get_user_model()
 
@@ -85,4 +86,32 @@ class LoginSerializer(serializers.Serializer):
 
     email = serializers.EmailField(required=True, max_length=50)
     password = serializers.CharField(required=True, max_length=50)
-    
+
+
+class GroupSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = Group
+        fields = '__all__'
+
+    def to_representation(self, instance):
+        response = super(GroupSerializer, self).to_representation(instance)
+        response['permissions'] = [i.name for i in instance.permissions.all()]
+        return response
+
+
+class ProfileSerializer(serializers.ModelSerializer):
+
+    groups = GroupSerializer(required=False, read_only=True, many=True)
+
+    class Meta:
+        model = User
+        fields = ['fullname', 'email', 'groups']
+
+
+class UserListSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = User
+        fields = ['fullname', 'email', 'username', 'is_staff', 'is_superuser']
+

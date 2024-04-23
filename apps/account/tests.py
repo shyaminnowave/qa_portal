@@ -6,6 +6,7 @@ from pkg_resources import DistributionNotFound, get_distribution
 from rest_framework.test import APIClient
 from django.urls import reverse
 from rest_framework import status
+from django.contrib.auth.models import Group
 # Create your tests here.
 
 User = get_user_model()
@@ -13,6 +14,9 @@ User = get_user_model()
 
 @pytest.mark.django_db
 class TestUser:
+
+    def setup_method(self):
+        self.group = Group.objects.create(name='Guest')
 
     def test_create_user(self):
         user = User.objects.create_user(
@@ -22,6 +26,7 @@ class TestUser:
         )
         assert user.email == 'test@innowave.tech'
         assert user.username == 'test_name'
+        assert self.group in user.groups.all()
         assert user.is_active
         assert not user.is_staff
         assert not user.is_superuser
@@ -49,7 +54,7 @@ class TestLoginView(TestCase):
             'password': 'shyamkumar',
             'confirm_password': 'shyamkumar'
         }
-        self.url = reverse('create-user')
+        self.url = reverse('accounts.create-user')
 
     def test_create_user(self):
         response = self.client.post(self.url, self.user_data)
