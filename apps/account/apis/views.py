@@ -2,7 +2,7 @@ from rest_framework.views import Response
 from rest_framework import generics
 from apps.account.models import Account
 from apps.account.apis.serializers import AccountSerializer, LoginSerializer, ProfileSerializer, UserListSerializer, \
-                                PermissionSerializer, GroupListSerializer, GroupSerializer
+                                PermissionSerializer, GroupListSerializer, GroupSerializer, UserSerializer
 from django.contrib.auth import authenticate
 from rest_framework import status
 from apps.account.utils import get_token_for_user
@@ -94,6 +94,13 @@ class UserListView(generics.ListAPIView):
     queryset = Account.objects.all()
     serializer_class = UserListSerializer
     pagination_class = CustomPagination
+
+
+class UserUpdateGroup(generics.RetrieveUpdateAPIView):
+
+    queryset = Account.objects.all()
+    serializer_class = UserSerializer
+    lookup_field = 'username'
 
 
 class PermissionListView(generics.ListAPIView):

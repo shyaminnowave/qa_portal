@@ -142,5 +142,22 @@ class UserListSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = User
-        fields = ['fullname', 'email', 'username', 'is_staff', 'is_superuser']
+        fields = ['fullname', 'email', 'username', 'groups']
+
+    def to_representation(self, instance):
+        represent = super().to_representation(instance)
+        group = instance.groups.first()
+        if group:
+            represent['groups'] = group.name
+            represent['permissions'] = list(group.permissions.values_list('codename', flat=True))
+        return represent
+
+
+class UserSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = User
+        fields = ('fullname', 'email', 'username', 'groups')
+
+
 
