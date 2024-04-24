@@ -10,7 +10,7 @@ from django.core.exceptions import ValidationError
 from rest_framework.fields import CharField
 from apps.account.fields import CompanyEmailValidator
 import re
-from django.contrib.auth.models import Group, PermissionsMixin
+from django.contrib.auth.models import Group, PermissionsMixin, Permission
 
 User = get_user_model()
 
@@ -80,12 +80,33 @@ class AccountSerializer(serializers.ModelSerializer):
             password=validated_data['password']
         )
         return user
-    
+
 
 class LoginSerializer(serializers.Serializer):
 
     email = serializers.EmailField(required=True, max_length=50)
     password = serializers.CharField(required=True, max_length=50)
+
+
+class GroupListSerializer(serializers.ModelSerializer):
+
+    def __init__(self, *args, **kwargs):
+
+        request = kwargs['context']['request'] if 'context' in kwargs and 'request' in kwargs['context'] else None
+        if request and request.path == '/api/create-group/':
+            self.Meta.fields = '__all__'
+        elif request and request.path == '/api/group/':
+            self.Meta.fields = ['id', 'name']
+        super(GroupListSerializer, self).__init__(*args, **kwargs)
+
+    class Meta:
+        model = Group
+        fields = []
+
+    def to_representation(self, instance):
+        represent = super(GroupListSerializer, self).to_representation(instance)
+        represent['permissions'] = [i.name for i in instance.permissions.all()]
+        return represent
 
 
 class GroupSerializer(serializers.ModelSerializer):
@@ -100,9 +121,17 @@ class GroupSerializer(serializers.ModelSerializer):
         return response
 
 
+class PermissionSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = Permission
+        fields = ('id', "name", "codename")
+        ordering = ['-id']
+
+
 class ProfileSerializer(serializers.ModelSerializer):
 
-    groups = GroupSerializer(required=False, read_only=True, many=True)
+    groups = GroupListSerializer(required=False, read_only=True, many=True)
 
     class Meta:
         model = User

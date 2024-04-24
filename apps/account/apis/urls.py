@@ -12,4 +12,9 @@ urlpatterns = [
     path('token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
     path('profile/<slug:username>/', views.UserProfileView.as_view()),
     path('user-list/', views.UserListView.as_view()),
+    path('permissions/', views.PermissionListView.as_view()),
+    path('group/', views.GroupView.as_view()),
+    path('create-group/', views.GroupCreateView.as_view()),
+    path('group-detail/<int:pk>/', views.GroupDetailView.as_view())
+
 ]

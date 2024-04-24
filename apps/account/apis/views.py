@@ -2,7 +2,7 @@ from rest_framework.views import Response
 from rest_framework import generics
 from apps.account.models import Account
 from apps.account.apis.serializers import AccountSerializer, LoginSerializer, ProfileSerializer, UserListSerializer, \
-                                UsernameSerializer
+                                PermissionSerializer, GroupListSerializer, GroupSerializer
 from django.contrib.auth import authenticate
 from rest_framework import status
 from apps.account.utils import get_token_for_user
@@ -13,6 +13,7 @@ from apps.account.signals import user_token_login, user_token_logout
 from drf_spectacular.utils import extend_schema, OpenApiParameter, OpenApiExample, extend_schema_view
 from drf_spectacular.types import OpenApiTypes
 from apps.testcase_app.apis.views import CustomPagination
+from django.contrib.auth.models import Group, Permission
 
 
 class AccountCreateView(generics.CreateAPIView):
@@ -93,4 +94,37 @@ class UserListView(generics.ListAPIView):
     queryset = Account.objects.all()
     serializer_class = UserListSerializer
     pagination_class = CustomPagination
+
+
+class PermissionListView(generics.ListAPIView):
+
+    queryset = Permission.objects.all()
+    serializer_class = PermissionSerializer
+
+
+class GroupView(generics.ListAPIView):
+
+    queryset = Group.objects.all()
+    serializer_class = GroupListSerializer
+
+    def get_serializer_context(self):
+        return {"request": self.request}
+
+
+class GroupCreateView(generics.CreateAPIView):
+
+    queryset = Group
+    serializer_class = GroupListSerializer
+
+    def post(self, request, *args, **kwargs):
+        response = super(GroupCreateView, self).post(request, *args, **kwargs)
+        return Response({'success': True, 'data': response.data})
+
+
+class GroupDetailView(generics.RetrieveUpdateDestroyAPIView):
+
+    queryset = Group.objects.all()
+    serializer_class = GroupSerializer
+    lookup_field = 'pk'
+
 

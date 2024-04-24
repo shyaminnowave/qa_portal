@@ -3,6 +3,7 @@ from rest_framework import routers
 from apps.stbs.apis import views
 from apps.stbs.apis.views import LanguageViewset, STBManufactureViewSet, NatcoViewSet, NatcoLanguageViewSet
 
+app_name = 'stbs'
 
 routers = routers.SimpleRouter()
 routers.register(r'language', LanguageViewset)
