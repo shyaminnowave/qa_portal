@@ -143,32 +143,44 @@ class GetExcel(generics.GenericAPIView):
         natco = NactoManufactureLanguage.objects.all()
         try:
             for row in ws.iter_rows(min_row=2, values_only=True):
-                if row[0] is not None:
-                    jira_id_parts = row[0].split('-')
+                if row[2] is not None:
+                    jira_id_parts = str(row[2]).split('-')
                     _data = {
                         "jira_id": jira_id_parts[-1],
-                        "jira_summary": row[1],
-                        "test_description": row[2],
-                        "test_name": "TestCase"
+                        "jira_summary": row[6],
+                        "test_description": row[7],
+                        "test_name": f"TestCase - {jira_id_parts[-1]}"
                     }
                     testcase_list.append(TestCaseModel(**_data))
                     test_case = jira_id_parts[-1]
                     for data in natco:
                         natco_list.append(NatcoStatus(natco=data.natco, language=data.language_name,
                                                       device=data.device_name, test_case_id=test_case))
-                elif row[0] is None and row[5] is not None:
+                    if row[2] and row[8]:
+                        _step_data = {
+                        "testcase_id": test_case,
+                        "step_id": int(row[8]),
+                        "step_description": row[9],
+                        "step_data": '',
+                        "excepted_result": row[10]
+                        }
+                    step_list.append(TestCaseStep(**_step_data))
+                elif row[2] is None and row[8] is not None:
                     _step_data = {
                         "testcase_id": test_case,
-                        "step_id": int(row[5]),
-                        "step_description": row[6],
-                        "step_data": row[7],
-                        "excepted_result": row[8]
+                        "step_id": int(row[8]),
+                        "step_description": row[9],
+                        "step_data": '',
+                        "excepted_result": row[10]
                     }
                     step_list.append(TestCaseStep(**_step_data))
+                elif row[2] is None and row[8] is None:
+                    pass
             with transaction.atomic():
                 TestCaseModel.objects.bulk_create(testcase_list)
                 TestCaseStep.objects.bulk_create(step_list)
                 NatcoStatus.objects.bulk_create(natco_list)
         except Exception as e:
+            print(str(e))
             return Response({"success": False, "error": "Data Format Error"})
         return Response({"success": True, "data": "TestCase Added Successfull"})
