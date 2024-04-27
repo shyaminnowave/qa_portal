@@ -117,7 +117,7 @@ class GroupSerializer(serializers.ModelSerializer):
 
     def to_representation(self, instance):
         response = super(GroupSerializer, self).to_representation(instance)
-        response['permissions'] = [i.name for i in instance.permissions.all()]
+        response['permissions'] = [{"id": i.id, "name": i.name} for i in instance.permissions.all()]
         return response
 
 
