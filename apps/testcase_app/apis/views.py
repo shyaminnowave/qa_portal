@@ -17,6 +17,7 @@ from rest_framework.exceptions import APIException
 from django_filters import rest_framework as filters
 from apps.testcase_app.filters import NatcoStatusFilter
 from rest_framework import status
+from apps.stbs.permissions import AdminPermission
 
 
 class ExcelErrorException(APIException):
@@ -28,7 +29,7 @@ class ExcelErrorException(APIException):
 class TestCaseListView(generics.ListAPIView):
 
     # authentication_classes = [JWTAuthentication]
-    # permission_classes = [IsAuthenticated]
+    permission_classes = [AdminPermission]
     queryset = TestCaseModel.objects.all()
     serializer_class = TestCaseSerializerList
     pagination_class = CustomPagination
@@ -42,6 +43,7 @@ class TestCaseListView(generics.ListAPIView):
 
 class TestCaseView(generics.CreateAPIView):
 
+    permission_classes = [AdminPermission]
     serializer_class = TestCaseSerializer
 
     def post(self, request, *args, **kwargs):
@@ -50,6 +52,7 @@ class TestCaseView(generics.CreateAPIView):
 
 class TestCaseDetailView(generics.RetrieveUpdateDestroyAPIView):
 
+    permission_classes = [AdminPermission]
     lookup_field = 'jira_id'
     serializer_class = TestCaseSerializer
     queryset = TestCaseModel.objects.all()
@@ -65,6 +68,7 @@ class TestCaseDetailView(generics.RetrieveUpdateDestroyAPIView):
 
 class TestCaseNatcoView(generics.ListAPIView):
 
+    permission_classes = [AdminPermission]
     serializer_class = NatcoStatusSerializer
     model = NatcoStatus.objects.all()
     lookup_field = 'jira_id'
@@ -76,7 +80,7 @@ class TestCaseNatcoView(generics.ListAPIView):
 
 
 class TestCaseNatcoList(generics.ListAPIView):
-
+    permission_classes = [AdminPermission]
     serializer_class = NatcoStatusSerializer
     queryset = NatcoStatus.objects.all()
     filterset_class = NatcoStatusFilter
@@ -114,7 +118,7 @@ class TestCaseNatcoList(generics.ListAPIView):
 
 
 class TestCaseNatcoDetail(generics.RetrieveUpdateDestroyAPIView):
-
+    permission_classes = [AdminPermission]
     serializer_class = NatcoStatusSerializer
     queryset = NatcoStatus.objects.all()
     lookup_field = 'pk'
@@ -127,7 +131,7 @@ class TestCaseNatcoDetail(generics.RetrieveUpdateDestroyAPIView):
 
 
 class GetExcel(generics.GenericAPIView):
-
+    permission_classes = [AdminPermission]
     serializer_class = ExcelSerializer
 
     def post(self, request, *args, **kwargs):

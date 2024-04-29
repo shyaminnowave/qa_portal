@@ -5,12 +5,14 @@ from apps.stbs.apis.serializers import LanguageSerializer, STBManufactureSeriali
     NatcoLanguageSerializer, NatcoOptionSerializer, LanguageOptionSerializer, DeviceOptionSerializer
 from apps.testcase_app.pagination import CustomPagination
 from apps.stbs.mixins import OptionMixin
+from apps.stbs.permissions import LangaugeOptionPermission, NatcoOptionPermission, DeviceOptionPermission, \
+        AdminPermission, LanguagePermission
 from drf_spectacular.utils import extend_schema, OpenApiParameter, OpenApiSchemaBase
 from drf_spectacular.openapi import OpenApiTypes, OpenApiExample
 
 
 class LanguageViewset(ModelViewSet):
-    
+    permission_classes = [LanguagePermission]
     queryset = Language.objects.all()
     serializer_class = LanguageSerializer
     pagination_class = CustomPagination
@@ -24,21 +26,21 @@ class LanguageViewset(ModelViewSet):
 
 
 class STBManufactureViewSet(ModelViewSet):
-
+    permission_classes = [AdminPermission]
     queryset = STBManufacture.objects.all()
     serializer_class = STBManufactureSerializer
     pagination_class = CustomPagination
 
 
 class NatcoViewSet(ModelViewSet):
-
+    permission_classes = [AdminPermission]
     queryset = Natco.objects.all()
     serializer_class = NactoSerializer
     pagination_class = CustomPagination
 
 
 class NatcoLanguageViewSet(ModelViewSet):
-
+    permission_classes = [AdminPermission]
     queryset = NactoManufactureLanguage.objects.all()
     serializer_class = NatcoLanguageSerializer
     pagination_class = CustomPagination
@@ -48,16 +50,19 @@ class NatcoLanguageViewSet(ModelViewSet):
 
 
 class NatcoOptionView(OptionMixin, generics.GenericAPIView):
+    permission_classes = [NatcoOptionPermission]
     queryset = Natco.objects.all()
     serializer_class = NatcoOptionSerializer
 
 
 class LanguageOptionView(OptionMixin, generics.GenericAPIView):
+    permission_classes = [LangaugeOptionPermission]
     queryset = Language.objects.all()
     serializer_class = LanguageOptionSerializer
 
 
 class DeviceOptionView(OptionMixin, generics.GenericAPIView):
+    permission_classes = [DeviceOptionPermission]
     queryset = STBManufacture.objects.all()
     serializer_class = DeviceOptionSerializer
 

@@ -10,10 +10,9 @@ from django.utils.translation import gettext_lazy as _
 class AccountAdmin(admin.ModelAdmin):
     readonly_fields = ['password']
     list_display = ['username', 'email', 'fullname', 'is_staff']
-    
     fieldsets = (
-        (None, {'fields': ('username', 'password')}),
-        (_('Personal info'), {'fields': ('email',)}),
+        (_('Credentials'), {'fields': ('username', 'password')}),
+        (_('Personal info'), {'fields': ('email', 'fullname')}),
         (_('Permissions'), {
             'fields': ('is_active', 'is_staff', 'is_superuser', 'groups', 'user_permissions'),
         }),

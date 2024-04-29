@@ -14,6 +14,9 @@ from drf_spectacular.utils import extend_schema, OpenApiParameter, OpenApiExampl
 from drf_spectacular.types import OpenApiTypes
 from apps.testcase_app.apis.views import CustomPagination
 from django.contrib.auth.models import Group, Permission
+from apps.account.permissions import AdminUserPermission, DjangoModelPermissions, UserPermission, \
+    GroupCreatePermission, DjangoObjectPermissions
+from rest_framework.permissions import IsAuthenticated
 
 
 class AccountCreateView(generics.CreateAPIView):
@@ -76,6 +79,8 @@ class LogoutView(APIView):
 
 class UserProfileView(generics.GenericAPIView):
 
+    permission_classes = [UserPermission]
+
     queryset = Account.objects.all()
     serializer_class = ProfileSerializer
     lookup_field = 'username'
@@ -91,12 +96,16 @@ class UserProfileView(generics.GenericAPIView):
 
 class UserListView(generics.ListAPIView):
 
+    permission_classes = [UserPermission]
+
     queryset = Account.objects.all()
     serializer_class = UserListSerializer
     pagination_class = CustomPagination
 
 
 class UserUpdateGroup(generics.RetrieveUpdateAPIView):
+
+    permission_classes = [AdminUserPermission]
 
     queryset = Account.objects.all()
     serializer_class = UserSerializer
@@ -105,12 +114,14 @@ class UserUpdateGroup(generics.RetrieveUpdateAPIView):
 
 class PermissionListView(generics.ListAPIView):
 
+    permission_classes = [AdminUserPermission]
     queryset = Permission.objects.all()
     serializer_class = PermissionSerializer
 
 
 class GroupView(generics.ListAPIView):
 
+    permission_classes = [UserPermission]
     queryset = Group.objects.all()
     serializer_class = GroupListSerializer
 
@@ -120,7 +131,9 @@ class GroupView(generics.ListAPIView):
 
 class GroupCreateView(generics.CreateAPIView):
 
-    queryset = Group
+    permission_classes = [DjangoModelPermissions]
+
+    queryset = Group.objects.all()
     serializer_class = GroupListSerializer
 
     def post(self, request, *args, **kwargs):
@@ -129,6 +142,7 @@ class GroupCreateView(generics.CreateAPIView):
 
 
 class GroupDetailView(generics.RetrieveUpdateDestroyAPIView):
+    permission_classes = [DjangoObjectPermissions]
 
     queryset = Group.objects.all()
     serializer_class = GroupSerializer

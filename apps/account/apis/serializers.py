@@ -137,6 +137,12 @@ class ProfileSerializer(serializers.ModelSerializer):
         model = User
         fields = ['fullname', 'email', 'groups']
 
+    def __init__(self, request, *args, **kwargs):
+        super().__init__(request, *args, **kwargs)
+        user = self.context['request'].user
+        if not user.groups.filter(name='Desired Group Name').exists():
+            self.fields.pop('groups')
+
 
 class UserListSerializer(serializers.ModelSerializer):
 

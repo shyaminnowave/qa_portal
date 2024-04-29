@@ -5,6 +5,7 @@ from apps.stbs.models import Language, Natco, STBManufacture
 from django.contrib.auth import get_user_model
 from simple_history.models import HistoricalRecords
 import json
+from ckeditor.fields import RichTextField
 # Create your models here.
 
 User = get_user_model()
@@ -49,7 +50,7 @@ class TestCaseModel(TimeStampedModel):
     jira_id = models.IntegerField(_("Jira Id"), primary_key=True, unique=True, help_text=("Jira Id"))
     test_name = models.CharField(_("Test Report Name"), max_length=255, help_text=("Please Enter the TestCase Name"))
     jira_summary = models.TextField(_("Jira Summary"))
-    test_description = models.TextField(_("Test description"))
+    test_description = RichTextField(_('TestCase Description'))
     testcase_type = models.CharField(choices=TESTCASE_CHOICES, max_length=20, default=PERFORMANCE)
     comments = models.TextField(blank=True, null=True)
     defects = models.TextField(blank=True, null=True)
@@ -73,7 +74,7 @@ class TestCaseModel(TimeStampedModel):
         self.changed_by = value
 
     def __str__(self) -> str:
-        return "%s - %s" % (self.test_name, self.jira_id)
+        return '%s' % self.test_name
 
     def get_jira_id(self) -> str:
         return 'TTVTM - %s' % self.jira_id
@@ -146,7 +147,7 @@ class TestCaseStep(TimeStampedModel):
     step_id = models.IntegerField(_("step number"), blank=True, null=True)
     step_data = models.TextField(_('Testing Parameters'), blank=True, null=True)
     step_description = models.TextField(blank=True, null=True)
-    excepted_result = models.TextField(blank=True, null=True)
+    excepted_result = RichTextField(blank=True, null=True)
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default=TODO)
     history = HistoricalRecords()
 
