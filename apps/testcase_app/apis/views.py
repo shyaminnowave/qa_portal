@@ -2,7 +2,7 @@ from rest_framework.views import Response
 from rest_framework import generics
 from apps.testcase_app.models import TestCaseModel, TestCaseStep, NatcoStatus
 from apps.testcase_app.apis.serializers import TestCaseSerializerList, TestCaseSerializer, ExcelSerializer, \
-        NatcoStatusSerializer
+        NatcoStatusSerializer, TestCaseStatusUpdateSerializer
 from apps.stbs.models import NactoManufactureLanguage
 from rest_framework.response import Response
 from django.shortcuts import get_object_or_404
@@ -26,10 +26,23 @@ class ExcelErrorException(APIException):
     default_code = "error"
 
 
+class TestCaseStatusUpdateView(generics.GenericAPIView):
+
+    serializer_class = TestCaseStatusUpdateSerializer
+    queryset = TestCaseModel.objects.all()
+
+    def patch(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        if serializer.is_valid():
+            serializer.update(serializer.validated_data)
+            return Response("success")
+        return Response(serializer.errors)
+
+
 class TestCaseListView(generics.ListAPIView):
 
     # authentication_classes = [JWTAuthentication]
-    permission_classes = [AdminPermission]
+    # permission_classes = [AdminPermission]
     queryset = TestCaseModel.objects.all()
     serializer_class = TestCaseSerializerList
     pagination_class = CustomPagination

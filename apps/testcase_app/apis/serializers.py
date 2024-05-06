@@ -12,6 +12,20 @@ class TestCaseSerializerList(serializers.ModelSerializer):
                   'status', 'automation_status')
 
 
+class TestCaseStatusUpdateSerializer(serializers.Serializer):
+
+    jira_id = serializers.ListField(child=serializers.IntegerField())
+    status = serializers.CharField(required=True)
+
+    def update(self, validated_data, instance=None):
+        _testcase = [TestCaseModel.objects.get(jira_id=test_case) for test_case in validated_data.get('jira_id')]
+        _status = validated_data.get('status', None)
+        for _test in _testcase:
+            _test.status = _status
+        TestCaseModel.objects.bulk_update(_testcase, fields=['status'])
+        return instance
+
+
 class TestStepSerializer(serializers.ModelSerializer):
     
     class Meta:
