@@ -79,7 +79,7 @@ class LogoutView(APIView):
 
 class UserProfileView(generics.GenericAPIView):
 
-    permission_classes = [UserPermission]
+    # permission_classes = [UserPermission]
 
     queryset = Account.objects.all()
     serializer_class = ProfileSerializer
@@ -96,7 +96,7 @@ class UserProfileView(generics.GenericAPIView):
 
 class UserListView(generics.ListAPIView):
 
-    permission_classes = [UserPermission]
+    # permission_classes = [UserPermission]
 
     queryset = Account.objects.all()
     serializer_class = UserListSerializer
@@ -105,7 +105,7 @@ class UserListView(generics.ListAPIView):
 
 class UserUpdateGroup(generics.RetrieveUpdateAPIView):
 
-    permission_classes = [AdminUserPermission]
+    # permission_classes = [AdminUserPermission]
 
     queryset = Account.objects.all()
     serializer_class = UserSerializer
@@ -114,7 +114,7 @@ class UserUpdateGroup(generics.RetrieveUpdateAPIView):
 
 class PermissionListView(generics.ListAPIView):
 
-    permission_classes = [AdminUserPermission]
+    # permission_classes = [AdminUserPermission]
     queryset = Permission.objects.all()
     serializer_class = PermissionSerializer
 
@@ -131,7 +131,7 @@ class GroupView(generics.ListAPIView):
 
 class GroupCreateView(generics.CreateAPIView):
 
-    permission_classes = [DjangoModelPermissions]
+    # permission_classes = [DjangoModelPermissions]
 
     queryset = Group.objects.all()
     serializer_class = GroupListSerializer
@@ -142,7 +142,7 @@ class GroupCreateView(generics.CreateAPIView):
 
 
 class GroupDetailView(generics.RetrieveUpdateDestroyAPIView):
-    permission_classes = [DjangoObjectPermissions]
+    # permission_classes = [DjangoObjectPermissions]
 
     queryset = Group.objects.all()
     serializer_class = GroupSerializer

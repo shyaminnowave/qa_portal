@@ -129,19 +129,28 @@ class PermissionSerializer(serializers.ModelSerializer):
         ordering = ['-id']
 
 
+class UserGroupSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = Group
+        fields = ['name']
+
+
 class ProfileSerializer(serializers.ModelSerializer):
 
-    groups = GroupListSerializer(required=False, read_only=True, many=True)
+    groups = UserGroupSerializer(required=False, read_only=True, many=True)
 
     class Meta:
         model = User
         fields = ['fullname', 'email', 'groups']
 
-    def __init__(self, request, *args, **kwargs):
-        super().__init__(request, *args, **kwargs)
-        user = self.context['request'].user
-        if not user.groups.filter(name='Desired Group Name').exists():
-            self.fields.pop('groups')
+    def to_representation(self, instance):
+        _data = super(ProfileSerializer, self).to_representation(instance)
+        if instance.groups.exists():
+            _data['groups'] = instance.groups.first().name
+        else:
+            _data = None
+        return _data
 
 
 class UserListSerializer(serializers.ModelSerializer):
