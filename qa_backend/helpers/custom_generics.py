@@ -92,7 +92,7 @@ class CustomUpdateAPIView(mixins.UpdateModelMixin, GenericAPIView):
         
     def patch(self, request, *args, **kwargs):
         response = self.partial_update(request, *args, **kwargs)
-        if response.data():
+        if response.data:
             self.response_format['status'] = True
             self.response_format['status_code'] = status.HTTP_200_OK
             self.response_format['data'] = response.data
@@ -114,6 +114,7 @@ class CustomRetrieveUpdateAPIView(mixins.RetrieveModelMixin,
 
     def get(self, request, *args, **kwargs):
         response = super().retrieve(request, *args, **kwargs)
+        print(response.data)
         if response.data:
             self.response_format['status'] = True
             self.response_format['status_code'] = status.HTTP_200_OK
@@ -142,7 +143,7 @@ class CustomRetrieveUpdateAPIView(mixins.RetrieveModelMixin,
         
     def patch(self, request, *args, **kwargs):
         response = self.partial_update(request, *args, **kwargs)
-        if response.data():
+        if response.data:
             self.response_format['status'] = True
             self.response_format['status_code'] = status.HTTP_200_OK
             self.response_format['data'] = response.data
@@ -231,7 +232,7 @@ class CustomRetrieveUpdateDestroyAPIView(mixins.RetrieveModelMixin,
         
     def patch(self, request, *args, **kwargs):
         response = self.partial_update(request, *args, **kwargs)
-        if response.data():
+        if response.data:
             self.response_format['status'] = True
             self.response_format['status_code'] = status.HTTP_200_OK
             self.response_format['data'] = response.data

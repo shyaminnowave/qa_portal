@@ -64,7 +64,7 @@ class TestCaseListView(generics.ListAPIView):
 
 class TestCaseView(cgenerics.CustomCreateAPIView):
 
-    permission_classes = [AdminPermission]
+    # permission_classes = [AdminPermission]
     serializer_class = TestCaseSerializer
 
     def post(self, request, *args, **kwargs):
@@ -85,7 +85,7 @@ class TestCaseDetailView(cgenerics.CustomRetrieveUpdateDestroyAPIView):
 
 class TestCaseNatcoView(generics.ListAPIView):
 
-    permission_classes = [AdminPermission]
+    # permission_classes = [AdminPermission]
     serializer_class = NatcoStatusSerializer
     model = NatcoStatus.objects.all()
     lookup_field = 'jira_id'
@@ -97,7 +97,7 @@ class TestCaseNatcoView(generics.ListAPIView):
 
 
 class TestCaseNatcoList(generics.ListAPIView):
-    permission_classes = [AdminPermission]
+    # permission_classes = [AdminPermission]
     serializer_class = NatcoStatusSerializer
     queryset = NatcoStatus.objects.all()
     filterset_class = NatcoStatusFilter
@@ -135,7 +135,7 @@ class TestCaseNatcoList(generics.ListAPIView):
 
 
 class TestCaseNatcoDetail(cgenerics.CustomRetrieveUpdateDestroyAPIView):
-    permission_classes = [AdminPermission]
+    # permission_classes = [AdminPermission]
     serializer_class = NatcoStatusSerializer
     queryset = NatcoStatus.objects.all()
     lookup_field = 'pk'
@@ -147,7 +147,7 @@ class GetExcel(generics.GenericAPIView):
         self.response_format = ResponseInfo().response
         super().__init__(**kwargs)
 
-    permission_classes = [AdminPermission]
+    # permission_classes = [AdminPermission]
     serializer_class = ExcelSerializer
 
     def post(self, request, *args, **kwargs):
