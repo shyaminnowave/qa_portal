@@ -11,8 +11,16 @@ from rest_framework.fields import CharField
 from apps.account.fields import CompanyEmailValidator
 import re
 from django.contrib.auth.models import Group, PermissionsMixin, Permission
+from qa_backend.helpers.exceptions import CustomFieldException
+from rest_framework.exceptions import AuthenticationFailed
 
 User = get_user_model()
+
+
+def name_validator(value):
+    if value is not None and value.isalpha():
+        return value
+    raise ValidationError("Name Should be Alphabets Only")
 
 
 class CompanyMail(CharField):
@@ -44,8 +52,8 @@ class EmailExistValidation(serializers.ValidationError):
 class AccountSerializer(serializers.ModelSerializer):
 
     email = CompanyMail(required=True, max_length=30)
-    fullname = serializers.CharField(required=True, max_length=30)
-    password = serializers.CharField(required=True, max_length=20)
+    fullname = serializers.CharField(required=True, max_length=30, validators=[name_validator])
+    password = serializers.CharField(required=True, max_length=20, write_only=True)
     confirm_password = serializers.CharField(required=True, max_length=20, write_only=True)
         
     class Meta:
@@ -66,9 +74,9 @@ class AccountSerializer(serializers.ModelSerializer):
         password = attrs.get('password')
         confirm_password = attrs.get('confirm_password')            
         if password != confirm_password:
-            raise serializers.ValidationError({"message": "Password and confirm Password is Not Matching"})
+            raise serializers.ValidationError({"password": "Password and confirm password Not Matching"})
         if User.objects.filter(email=attrs.get('email')).exists():
-            raise serializers.ValidationError({"message": "Email Already Exists Please Go with another Email"})
+            raise serializers.ValidationError({"email": "Email Already Exists Please Go with another Email"})
         return attrs
 
     def create(self, validated_data):
@@ -173,6 +181,10 @@ class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
         fields = ('fullname', 'email', 'username', 'groups')
-
+    #
+    # def to_representation(self, instance):
+    #     represent = super().to_representation(instance)
+    #     represent['groups'] = instance.groups.first().name()
+    #     return represent
 
 

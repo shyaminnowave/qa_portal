@@ -1,7 +1,7 @@
 from rest_framework.views import Response
 from rest_framework.pagination import PageNumberPagination
 from collections import OrderedDict
-
+from rest_framework import status
 
 
 class CustomPagination(PageNumberPagination):
@@ -17,6 +17,8 @@ class CustomPagination(PageNumberPagination):
             ('next', response.data.get('next')),
             ('previous', response.data.get('previous')),
             ('page_count', page_count),
-            ('success', True),
+            ('status', True),
+            ('status_code', status.HTTP_200_OK),
+            ('message', 'Success'),
             ('data', data)
         ]))

@@ -18,15 +18,15 @@ from django_filters import rest_framework as filters
 from apps.testcase_app.filters import NatcoStatusFilter
 from rest_framework import status
 from apps.stbs.permissions import AdminPermission
-
-
-class ExcelErrorException(APIException):
-
-    default_detail = "Cannot Import Excel file. Please Check the Data"
-    default_code = "error"
+from qa_backend.helpers.renders import ResponseInfo
+from qa_backend.helpers import custom_generics as cgenerics
 
 
 class TestCaseStatusUpdateView(generics.GenericAPIView):
+
+    def __init__(self, **kwargs) -> None:
+        self.response_format = ResponseInfo().response
+        super().__init__(**kwargs)
 
     serializer_class = TestCaseStatusUpdateSerializer
     queryset = TestCaseModel.objects.all()
@@ -35,8 +35,16 @@ class TestCaseStatusUpdateView(generics.GenericAPIView):
         serializer = self.get_serializer(data=request.data)
         if serializer.is_valid():
             serializer.update(serializer.validated_data)
-            return Response("success")
-        return Response(serializer.errors)
+            self.response_format['status'] = True
+            self.response_format['status_code'] = status.HTTP_200_OK
+            self.response_format['data'] = "Success"
+            self.response_format['message'] = "Success"
+            return Response(self.response_format, status=status.HTTP_200_OK)
+        else:
+            self.response_format['status'] = False
+            self.response_format['status_code'] = status.HTTP_400_BAD_REQUEST
+            self.response_format['message'] = "error"
+            return Response(self.response_format, status=status.HTTP_400_BAD_REQUEST)
 
 
 class TestCaseListView(generics.ListAPIView):
@@ -54,7 +62,7 @@ class TestCaseListView(generics.ListAPIView):
         return super().list(request, *args, **kwargs)
 
 
-class TestCaseView(generics.CreateAPIView):
+class TestCaseView(cgenerics.CustomCreateAPIView):
 
     permission_classes = [AdminPermission]
     serializer_class = TestCaseSerializer
@@ -63,9 +71,9 @@ class TestCaseView(generics.CreateAPIView):
         return super(TestCaseView, self).post(request, *args, **kwargs)
 
 
-class TestCaseDetailView(generics.RetrieveUpdateDestroyAPIView):
+class TestCaseDetailView(cgenerics.CustomRetrieveUpdateDestroyAPIView):
 
-    permission_classes = [AdminPermission]
+    # permission_classes = [AdminPermission]
     lookup_field = 'jira_id'
     serializer_class = TestCaseSerializer
     queryset = TestCaseModel.objects.all()
@@ -73,10 +81,6 @@ class TestCaseDetailView(generics.RetrieveUpdateDestroyAPIView):
     def get_object(self):
         queryset = get_object_or_404(TestCaseModel, jira_id=self.kwargs.get('jira_id'))
         return queryset
-    
-    def get(self, request, *args, **kwargs):
-        response = super().get(request, *args, **kwargs)
-        return Response({"success": True, "data": response.data})
 
 
 class TestCaseNatcoView(generics.ListAPIView):
@@ -130,20 +134,19 @@ class TestCaseNatcoList(generics.ListAPIView):
             return Response({"success": False, "data": str(e)})
 
 
-class TestCaseNatcoDetail(generics.RetrieveUpdateDestroyAPIView):
+class TestCaseNatcoDetail(cgenerics.CustomRetrieveUpdateDestroyAPIView):
     permission_classes = [AdminPermission]
     serializer_class = NatcoStatusSerializer
     queryset = NatcoStatus.objects.all()
     lookup_field = 'pk'
-    
-    def patch(self, request, *args, **kwargs):
-        response = super(TestCaseNatcoDetail, self).patch(request, *args, **kwargs)
-        if response.status_code == status.HTTP_200_OK:
-            return Response({'success': True, "data": response.data})
-        return Response({"success": False, "error": "Field Not Updated"})
 
 
 class GetExcel(generics.GenericAPIView):
+
+    def __init__(self, **kwargs) -> None:
+        self.response_format = ResponseInfo().response
+        super().__init__(**kwargs)
+
     permission_classes = [AdminPermission]
     serializer_class = ExcelSerializer
 
@@ -198,6 +201,13 @@ class GetExcel(generics.GenericAPIView):
                 TestCaseStep.objects.bulk_create(step_list)
                 NatcoStatus.objects.bulk_create(natco_list)
         except Exception as e:
-            print(str(e))
-            return Response({"success": False, "error": "Data Format Error"})
-        return Response({"success": True, "data": "TestCase Added Successfull"})
+            self.response_format['status'] = False
+            self.response_format['status_code'] = status.HTTP_400_BAD_REQUEST
+            self.response_format['data'] = 'Error'
+            self.response_format['massage'] = "TestCase Upload Failed"
+            return Response(self.response_format, status=status.HTTP_400_BAD_REQUEST)
+        self.response_format['status'] = True
+        self.response_format['status_code'] = status.HTTP_200_OK
+        self.response_format['data'] = "Success"
+        self.response_format['message'] = "TestCase Uploaded Successfully"
+        return Response(self.response_format, status=status.HTTP_201_CREATED)
