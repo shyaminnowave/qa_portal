@@ -20,6 +20,7 @@ from rest_framework import status
 from apps.stbs.permissions import AdminPermission
 from qa_backend.helpers.renders import ResponseInfo
 from qa_backend.helpers import custom_generics as cgenerics
+from django.db.models import OuterRef, Subquery
 
 
 class TestCaseStatusUpdateView(generics.GenericAPIView):
@@ -76,32 +77,41 @@ class TestCaseDetailView(cgenerics.CustomRetrieveUpdateDestroyAPIView):
     # permission_classes = [AdminPermission]
     lookup_field = 'jira_id'
     serializer_class = TestCaseSerializer
-    queryset = TestCaseModel.objects.all()
     
     def get_object(self):
-        queryset = get_object_or_404(TestCaseModel, jira_id=self.kwargs.get('jira_id'))
+        queryset = get_object_or_404(TestCaseModel.objects.prefetch_related('test_steps'), jira_id=self.kwargs.get('jira_id'))
+        # natco = queryset.annotate(natco_status=Subquery(NatcoStatus.objects.select_related('test_case', 'language', 'device', 'natco', 'user').filter(test_case_id=self.kwargs.get('jira_id'))))
         return queryset
 
+    def get(self, request, *args, **kwargs):
+        response = super().retrieve(request, *args, **kwargs)
+        queryset = NatcoStatus.objects.select_related('test_case', 'language', 'device', 'natco', 'user').filter(test_case_id=self.kwargs.get('jira_id'))
+        serializer = NatcoStatusSerializer(queryset, many=True)
+        response.data['natco_status'] = serializer.data
+        return response
 
 class TestCaseNatcoView(generics.ListAPIView):
 
     # permission_classes = [AdminPermission]
     serializer_class = NatcoStatusSerializer
-    model = NatcoStatus.objects.all()
+    queryset = NatcoStatus.objects.all()
     lookup_field = 'jira_id'
     pagination_class = CustomPagination
 
     def get_queryset(self):
-        queryset = NatcoStatus.objects.filter(test_case_id=self.kwargs.get('jira_id'))
+        queryset = NatcoStatus.objects.select_related('test_case', 'natco_status').filter(test_case_id=self.kwargs.get('jira_id')).values('jira_id', 'jira_summary')
         return queryset
 
 
 class TestCaseNatcoList(generics.ListAPIView):
     # permission_classes = [AdminPermission]
     serializer_class = NatcoStatusSerializer
-    queryset = NatcoStatus.objects.all()
     filterset_class = NatcoStatusFilter
     pagination_class = CustomPagination
+
+    def get_queryset(self):
+        queryset = NatcoStatus.objects.select_related('test_case', 'language', 'device', 'natco', 'user').all()
+        return queryset
 
     @extend_schema(
         parameters=[
@@ -132,13 +142,17 @@ class TestCaseNatcoList(generics.ListAPIView):
                 return self.get_paginated_response(serializer.data)
         except Exception as e:
             return Response({"success": False, "data": str(e)})
-
+    
 
 class TestCaseNatcoDetail(cgenerics.CustomRetrieveUpdateDestroyAPIView):
     # permission_classes = [AdminPermission]
     serializer_class = NatcoStatusSerializer
-    queryset = NatcoStatus.objects.all()
+    # queryset = NatcoStatus.objects.all()
     lookup_field = 'pk'
+
+    def get_object(self):
+        queryset = NatcoStatus.objects.get(id=self.kwargs.get('pk')).select_related('test_case')
+        return queryset
 
 
 class GetExcel(generics.GenericAPIView):

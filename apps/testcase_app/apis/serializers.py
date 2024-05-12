@@ -2,7 +2,7 @@ import re
 
 from rest_framework import serializers
 from apps.testcase_app.models import TestCaseModel, TestCaseStep, NatcoStatus
-
+from apps.stbs.apis.serializers import NactoSerializer
 
 class TestCaseSerializerList(serializers.ModelSerializer):
 
@@ -57,12 +57,12 @@ class NatcoStatusSerializer(serializers.ModelSerializer):
 class TestCaseSerializer(serializers.ModelSerializer):
 
     test_steps = TestStepSerializer(many=True, required=False)
-    natco_status = NatcoStatusSerializer(many=True, required=False)
 
     class Meta:
         model = TestCaseModel
         fields = ('test_name', 'jira_id', 'jira_summary', 'test_description', 'comments', 'defects', 'status',
-                  'automation_status', 'script_name', 'script', 'test_steps', 'natco_status')
+                  'automation_status', 'script_name', 'script', 'test_steps')
+        
 
     def validate_test_name(self, value):
         if value is None:
