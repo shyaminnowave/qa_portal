@@ -1,3 +1,4 @@
+import re
 from django.db import models
 from django_extensions.db.models import TimeStampedModel
 from django.utils.translation import gettext_lazy as _
@@ -12,6 +13,9 @@ User = get_user_model()
 
 
 class TestCaseModel(TimeStampedModel):
+
+    # class PriorityChoice(models.TextChoices):
+    #     CLASSTHREE = 'class_3', _('Class 3')
 
     TODO = 'todo'
     ONGOING = 'ongoing'
@@ -49,8 +53,9 @@ class TestCaseModel(TimeStampedModel):
 
     jira_id = models.IntegerField(_("Jira Id"), primary_key=True, unique=True, help_text=("Jira Id"))
     test_name = models.CharField(_("Test Report Name"), max_length=255, help_text=("Please Enter the TestCase Name"))
+    priority = models.CharField(max_length=20, default='Class 3')
     jira_summary = models.TextField(_("Jira Summary"))
-    test_description = RichTextField(_('TestCase Description'))
+    test_description = models.TextField(_('TestCase Description'))
     testcase_type = models.CharField(choices=TESTCASE_CHOICES, max_length=20, default=PERFORMANCE)
     comments = models.TextField(blank=True, null=True)
     defects = models.TextField(blank=True, null=True)
@@ -147,8 +152,169 @@ class TestCaseStep(TimeStampedModel):
     step_id = models.IntegerField(_("step number"), blank=True, null=True)
     step_data = models.TextField(_('Testing Parameters'), blank=True, null=True)
     step_description = models.TextField(blank=True, null=True)
-    excepted_result = RichTextField(blank=True, null=True)
+    excepted_result = models.TextField(blank=True, null=True)
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default=TODO)
     history = HistoricalRecords()
 
 
+
+class TestResult(TimeStampedModel):
+
+    run_type = models.CharField(max_length=200, default='')
+    date = models.CharField(max_length=200, default='')
+    iteration_number = models.CharField(max_length=200, default='')
+    testcase = models.CharField(max_length=255, default='')
+    load_time = models.CharField(max_length=200, default='')
+    cpu = models.CharField(max_length=200, default='')
+    ram = models.CharField(max_length=200, default='')
+    start_time = models.CharField(max_length=200, default='')
+    end_time = models.CharField(max_length=200, default='')
+    job_uid = models.CharField(max_length=255, default='')
+    node_id = models.CharField(max_length=255, default='')
+    failure_reason = models.TextField()
+    result = models.CharField(max_length=200, default='pass')
+    natco = models.CharField(max_length=200, default='')
+    load_time = models.CharField(max_length=200, default='')
+    cpu_usage = models.CharField(max_length=200, default='')
+    ram_usage = models.CharField(max_length=200, default='')
+    country_code = models.CharField(max_length=200, default='')
+    stb_release = models.CharField(max_length=200, default='')
+    stb_firmware = models.CharField(max_length=200, default='')
+    stb_android = models.CharField(max_length=200, default='')
+    stb_build = models.CharField(max_length=255, default='')
+    natoc_node = models.CharField(max_length=200, default='')
+    comment = models.CharField(max_length=200, default='')
+
+    def __str__(self):
+        return self.testcase
+
+    @property
+    def get_start_time(self):
+        start_time = re.findall(r'\b\d{2}:\d{2}:\d{2}\b', self.start_time)
+        return start_time[0]
+
+    @property
+    def get_end_time(self):
+        end_time = re.findall(r'\b\d{2}:\d{2}:\d{2}\b', self.end_time)
+        return end_time[0]
+
+    @classmethod
+    def get_unique_node(cls):  
+        node_id = cls.objects.values_list('natoc_nodes', flat=True).distinct()
+        return node_id
+
+    @classmethod
+    def get_unique_natco_type(cls):
+        natco_type = cls.objects.values_list('natco', flat=True).distinct()
+        return natco_type
+    
+    @classmethod
+    def get_unique_stb_release(cls):  
+        stb_release = cls.objects.values_list('stb_release', flat=True).distinct()
+        return stb_release
+
+    @classmethod
+    def get_unique_stb_android(cls):
+        stb_android = cls.objects.values_list('stb_android', flat=True).distinct()
+        return stb_android
+    
+    @classmethod
+    def get_unique_stb_firmware(cls):  
+        stb_firmware = cls.objects.values_list('stb_firmware', flat=True).distinct()
+        return stb_firmware
+    
+    @classmethod
+    def get_unique_filters(cls):
+        _filter = {
+            'node_id': cls.objects.values_list('natco', flat=True).distinct(),
+            'natco_type': cls.objects.values_list('natco', flat=True).distinct(),
+            'stb_release': cls.objects.values_list('stb_release', flat=True).distinct(),
+            'stb_android': cls.objects.values_list('stb_android', flat=True).distinct(),
+            'stb_firmware': cls.objects.values_list('stb_firmware', flat=True).distinct()
+        }
+        return _filter
+
+
+class Organization(TimeStampedModel):
+
+    name = models.CharField(max_length=200)
+    address = models.TextField()
+    contact_info = models.CharField(max_length=200)
+
+
+class ProjectInfo(TimeStampedModel):
+
+    name = models.CharField(max_length=200)
+    description = models.TextField()
+    start_date = models.DateTimeField(auto_now_add=True)
+    end_date = models.DateTimeField()
+    owner = models.ForeignKey(Organization, on_delete=models.CASCADE)
+    status = models.BooleanField(default=True)
+
+
+class TestPlan(TimeStampedModel):
+
+    name = models.CharField(max_length=200)
+    project = models.ForeignKey(ProjectInfo, on_delete=models.CASCADE)
+    start_date = models.DateTimeField()
+    end_date = models.DateTimeField()
+    owner = models.ForeignKey(Organization, on_delete=models.CASCADE)
+    status = models.BooleanField()
+
+
+class TestRun(TimeStampedModel):
+
+    testcase = models.ForeignKey(TestCaseModel, on_delete=models.CASCADE)
+    tester = models.ForeignKey(User, on_delete=models.CASCADE)
+    execution_date = models.DateField()
+    execution_time = models.TimeField()
+    status = models.BooleanField()
+    actual_results = models.CharField(max_length=200)
+    comments = models.CharField(max_length=200)
+
+
+class Defects(TimeStampedModel):
+
+    testrun = models.ForeignKey(TestRun, on_delete=models.CASCADE)
+    severity = models.CharField(max_length=200)
+    priority = models.CharField(max_length=200)
+    status = models.BooleanField()
+    assigned = models.ForeignKey(User, on_delete=models.CASCADE, related_name='defects_assigned')
+    reported = models.ForeignKey(User, on_delete=models.CASCADE, related_name='defects_reported')
+    reported_date = models.DateField()
+
+
+class TestEnv(TimeStampedModel):
+
+    name = models.CharField(max_length=200)
+    description = models.TextField()
+    configuration_details = models.TextField()
+
+
+class TestCycle(TimeStampedModel):
+
+    name = models.CharField(max_length=200)
+    description = models.TextField()
+    project = models.ForeignKey(ProjectInfo, on_delete=models.CASCADE)
+    start_date = models.DateTimeField()
+    end_date = models.DateTimeField()
+    owner = models.ForeignKey(Organization, on_delete=models.CASCADE)
+    status = models.BooleanField()
+
+
+class TestSuit(TimeStampedModel):
+
+    name = models.CharField(max_length=200)
+    description = models.TextField()
+    testplan = models.ForeignKey(TestPlan, on_delete=models.CASCADE)
+
+
+class TestRelease(TimeStampedModel):
+
+    name = models.CharField(max_length=200)
+    description = models.TextField()
+    project = models.ForeignKey(ProjectInfo, on_delete=models.CASCADE)
+    start_date = models.DateTimeField()
+    end_date = models.DateTimeField()
+    owner = models.ForeignKey(Organization, on_delete=models.CASCADE)
+    status = models.BooleanField()

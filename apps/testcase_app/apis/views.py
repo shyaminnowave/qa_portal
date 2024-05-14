@@ -1,8 +1,8 @@
 from rest_framework.views import Response
 from rest_framework import generics
-from apps.testcase_app.models import TestCaseModel, TestCaseStep, NatcoStatus
+from apps.testcase_app.models import TestCaseModel, TestCaseStep, NatcoStatus, TestResult
 from apps.testcase_app.apis.serializers import TestCaseSerializerList, TestCaseSerializer, ExcelSerializer, \
-        NatcoStatusSerializer, TestCaseStatusUpdateSerializer
+        NatcoStatusSerializer, TestCaseStatusUpdateSerializer, TestResultDRPSerializer
 from apps.stbs.models import NactoManufactureLanguage
 from rest_framework.response import Response
 from django.shortcuts import get_object_or_404
@@ -19,8 +19,13 @@ from apps.testcase_app.filters import NatcoStatusFilter
 from rest_framework import status
 from apps.stbs.permissions import AdminPermission
 from qa_backend.helpers.renders import ResponseInfo
+from rest_framework.renderers import TemplateHTMLRenderer
 from qa_backend.helpers import custom_generics as cgenerics
 from django.db.models import OuterRef, Subquery
+from django.views.generic import TemplateView
+from rest_framework.views import APIView
+from rest_framework import status
+import json
 
 
 class TestCaseStatusUpdateView(generics.GenericAPIView):
@@ -153,6 +158,104 @@ class TestCaseNatcoDetail(cgenerics.CustomRetrieveUpdateDestroyAPIView):
     def get_object(self):
         queryset = NatcoStatus.objects.get(id=self.kwargs.get('pk')).select_related('test_case')
         return queryset
+    
+
+class TestResultFilterView(generics.GenericAPIView):
+
+    def __init__(self, **kwargs):
+        self.response_format = ResponseInfo().response
+        super().__init__(**kwargs)
+
+    serializer_class = TestResultDRPSerializer
+
+    def get_queryset(self):
+        _queryset = dict()
+        _node = TestResult.get_unique_node()
+        _natco_type = TestResult.get_unique_natco_type()
+        _stb_release = TestResult.get_unique_stb_release()
+        _stb_android = TestResult.get_unique_stb_android()
+        _stb_firmware = TestResult.get_unique_stb_firmware()
+        _queryset = {
+            'node_id': _node,
+            'natco_type': _natco_type,
+            'stb_release': _stb_release,
+            'stb_android': _stb_android,
+            'stb_firmware': _stb_firmware
+        }
+        return _queryset
+
+    def get(self, request, *args, **kwargs):
+        queryset = self.get_queryset()
+        if queryset:
+            self.response_format['success'] = True
+            self.response_format['status_code'] = status.HTTP_200_OK
+            self.response_format['data'] = queryset
+            self.response_format['message'] = 'Success'
+            return Response(self.response_format, status=status.HTTP_200_OK)
+        if not queryset:
+            self.response_format['success'] = False
+            self.response_format['status_code'] = status.HTTP_400_BAD_REQUEST
+            self.response_format['message'] = 'Error'
+            return Response(self.response_format, status=status.HTTP_200_OK)
+        return Response(self.response_format, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+class GetTestResult(generics.GenericAPIView):
+
+    def __init__(self, **kwargs):
+        self.response_format = ResponseInfo().response
+        super().__init__(**kwargs)
+
+    serializer_class = ExcelSerializer
+
+    def post(self, request, *args, **kwargs):
+        _file = request.FILES.get('file')
+        wb = load_workbook(_file)
+        ws = wb.active
+        _test_result = []
+        try:
+            for row in ws.iter_rows(min_row=2, values_only=True):
+                _data = {
+                    'run_type': row[0], 
+                    'date': row[1], 
+                    'iteration_number' : row[2], 
+                    'testcase' : row[3], 
+                    'load_time' : row[4], 
+                    'cpu' : row[5], 
+                    'ram' : row[6], 
+                    'start_time' : row[7], 
+                    'end_time' : row[8], 
+                    'job_uid' : row[9], 
+                    'node_id' : row[10], 
+                    'failure_reason' : row[11], 
+                    'result' : row[12], 
+                    'natco' : row[13], 
+                    'load_time' : row[14], 
+                    'cpu_usage' : row[15], 
+                    'ram_usage' : row[16], 
+                    'country_code' : row[17], 
+                    'stb_release' : row[18], 
+                    'stb_firmware' : row[19], 
+                    'stb_android' : row[20], 
+                    'stb_build' : row[21], 
+                    'natoc_node' : row[22], 
+                    'comment' : row[23], 
+                }
+                _test_result.append(TestResult(**_data))
+            with transaction.atomic():
+                TestResult.objects.bulk_create(_test_result)
+        except Exception as e:
+            self.response_format['status'] = False
+            self.response_format['status_code'] = status.HTTP_400_BAD_REQUEST
+            self.response_format['data'] = 'Error'
+            self.response_format['massage'] = "mesga"
+            return Response(self.response_format, status=status.HTTP_400_BAD_REQUEST)
+        self.response_format['status'] = True
+        self.response_format['status_code'] = status.HTTP_200_OK
+        self.response_format['data'] = "Success"
+        self.response_format['message'] = "TestCase Uploaded Successfully"
+        return Response(self.response_format, status=status.HTTP_201_CREATED)
+        
 
 
 class GetExcel(generics.GenericAPIView):
@@ -225,3 +328,5 @@ class GetExcel(generics.GenericAPIView):
         self.response_format['data'] = "Success"
         self.response_format['message'] = "TestCase Uploaded Successfully"
         return Response(self.response_format, status=status.HTTP_201_CREATED)
+
+

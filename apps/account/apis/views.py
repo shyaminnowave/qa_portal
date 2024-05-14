@@ -24,17 +24,15 @@ from qa_backend.helpers import custom_generics as cgenerics
 
 class AccountCreateView(cgenerics.CustomCreateAPIView):
 
-    queryset = Account.objects.all()
     serializer_class = AccountSerializer
-    
+
 
 class LoginView(generics.GenericAPIView):
 
     def __init__(self, **kwargs: Any) -> None:
         self.response_format = ResponseInfo().response
         super().__init__(**kwargs)
-    
-    queryset = Account.objects.all()
+
     serializer_class = LoginSerializer
 
     def post(self, request, *args, **kwargs):
@@ -62,7 +60,7 @@ class LoginView(generics.GenericAPIView):
                 self.response_format['status_code'] = status.HTTP_400_BAD_REQUEST
                 self.response_format['data'] = user_cred
                 self.response_format['message'] = "User Login Successfull"
-                return Response({'success': False, 'error': "Please Check the login Creditionals"},
+                return Response(self.response_format,
                         status=status.HTTP_404_NOT_FOUND)
         except Exception as e:
             self.response_format['status'] = False
@@ -120,23 +118,32 @@ class UserProfileView(generics.GenericAPIView):
         super().__init__(**kwargs)
 
     # permission_classes = [UserPermission]
-    queryset = Account.objects.all()
     serializer_class = ProfileSerializer
     lookup_field = 'username'
 
+    def get_object(self):
+        queryset = Account.objects.only('fullname', 'email', 'groups').select_related('groups').get(username=self.kwargs.get('username'))
+        return queryset
+
     def get(self, request, *args, **kwargs):
-        serializer = self.get_serializer(self.get_object())
-        if serializer.data:
-            self.response_format['status'] = True
-            self.response_format['status_code'] = status.HTTP_200_OK
-            self.response_format['data'] = serializer.data
-            self.response_format['message'] = "Success"
-            return Response(self.response_format)
-        else:
+        try:
+            serializer = self.get_serializer(self.get_object())
+            if serializer.data:
+                self.response_format['status'] = True
+                self.response_format['status_code'] = status.HTTP_200_OK
+                self.response_format['data'] = serializer.data
+                self.response_format['message'] = "Success"
+                return Response(self.response_format)
+            else:
+                self.response_format['status'] = False
+                self.response_format['status_code'] = status.HTTP_400_BAD_REQUEST
+                self.response_format['message'] = serializer.errors
+                return Response(self.response_format, status=status.HTTP_400_BAD_REQUEST)
+        except Exception as e:
             self.response_format['status'] = False
             self.response_format['status_code'] = status.HTTP_400_BAD_REQUEST
-            self.response_format['message'] = "Error"
-            return Response(self.response_format)
+            self.response_format['message'] = str(e)
+            return Response(self.response_format, status=status.HTTP_400_BAD_REQUEST)
 
     def patch(self, request, *args, **kwargs):
         """ Pending """
@@ -150,6 +157,11 @@ class UserListView(generics.ListAPIView):
     queryset = Account.objects.all()
     serializer_class = UserListSerializer
     pagination_class = CustomPagination
+
+    def get_queryset(self):
+        queryset = Account.objects.only('fullname', 'username', 'email', 'groups').prefetch_related('groups').all()
+        print(queryset)
+        return queryset
 
 
 class UserUpdateGroup(cgenerics.CustomRetrieveUpdateAPIView):
@@ -205,3 +217,4 @@ class GroupUsers(cgenerics.CustomRetriveAPIVIew):
         return queryset
 
     serializer_class = ProfileSerializer
+
