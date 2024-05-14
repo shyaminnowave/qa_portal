@@ -1,3 +1,4 @@
+from typing import Any
 from rest_framework import generics 
 from rest_framework.viewsets import ModelViewSet
 from apps.stbs.models import Language, STBManufacture, Natco, NactoManufactureLanguage
@@ -9,6 +10,9 @@ from apps.stbs.permissions import LangaugeOptionPermission, NatcoOptionPermissio
         AdminPermission, LanguagePermission
 from drf_spectacular.utils import extend_schema, OpenApiParameter, OpenApiSchemaBase
 from drf_spectacular.openapi import OpenApiTypes, OpenApiExample
+from qa_backend.helpers.renders import ResponseInfo
+from rest_framework import status
+from rest_framework.views import Request, Response
 
 
 class LanguageViewset(ModelViewSet):
@@ -50,20 +54,93 @@ class NatcoLanguageViewSet(ModelViewSet):
 
 
 class NatcoOptionView(OptionMixin, generics.GenericAPIView):
+
+    def __init__(self, **kwargs: Any) -> None:
+        self.response_format = ResponseInfo().response
+        super().__init__(**kwargs)
+
     # permission_classes = [NatcoOptionPermission]
     queryset = Natco.objects.all()
     serializer_class = NatcoOptionSerializer
 
+    def get(self, request, *args, **kwargs):
+        try:
+            serializer = self.get_serializer(self.get_queryset(), many=True)
+            if serializer.data:
+                self.response_format['status'] = True
+                self.response_format['status_code'] = status.HTTP_200_OK
+                self.response_format['data'] = serializer.data
+                self.response_format['message'] = "Success"
+                return Response(self.response_format, status=status.HTTP_200_OK)
+            elif not serializer.data:
+                self.response_format['status'] = True
+                self.response_format['status_code'] = status.HTTP_404_NOT_FOUND
+                self.response_format['message'] = "No Data"
+                return Response(self.response_format, status=status.HTTP_200_OK)
+        except Exception as e:
+            self.response_format['status'] = True
+            self.response_format['status_code'] = status.HTTP_500_INTERNAL_SERVER_ERROR
+            self.response_format['message'] = "No Data"
+            return Response(self.response_format, status=status.HTTP_200_OK)
 
 class LanguageOptionView(OptionMixin, generics.GenericAPIView):
+
+    def __init__(self, **kwargs: Any) -> None:
+        self.response_format = ResponseInfo().response
+        super().__init__(**kwargs)
+
     # permission_classes = [LangaugeOptionPermission]
     queryset = Language.objects.all()
     serializer_class = LanguageOptionSerializer
 
+    def get(self, request, *args, **kwargs):
+        try:
+            serializer = self.get_serializer(self.get_queryset(), many=True)
+            if serializer.data:
+                self.response_format['status'] = True
+                self.response_format['status_code'] = status.HTTP_200_OK
+                self.response_format['data'] = serializer.data
+                self.response_format['message'] = "Success"
+                return Response(self.response_format, status=status.HTTP_200_OK)
+            elif not serializer.data:
+                self.response_format['status'] = True
+                self.response_format['status_code'] = status.HTTP_404_NOT_FOUND
+                self.response_format['message'] = "No Data"
+                return Response(self.response_format, status=status.HTTP_200_OK)
+        except Exception as e:
+            self.response_format['status'] = True
+            self.response_format['status_code'] = status.HTTP_500_INTERNAL_SERVER_ERROR
+            self.response_format['message'] = "No Data"
+            return Response(self.response_format, status=status.HTTP_200_OK)
+
 
 class DeviceOptionView(OptionMixin, generics.GenericAPIView):
+
+    def __init__(self, **kwargs: Any) -> None:
+        self.response_format = ResponseInfo().response
+        super().__init__(**kwargs)
+
     # permission_classes = [DeviceOptionPermission]
     queryset = STBManufacture.objects.all()
     serializer_class = DeviceOptionSerializer
 
+    def get(self, request, *args, **kwargs):
+        try:
+            serializer = self.get_serializer(self.get_queryset(), many=True)
+            if serializer.data:
+                self.response_format['status'] = True
+                self.response_format['status_code'] = status.HTTP_200_OK
+                self.response_format['data'] = serializer.data
+                self.response_format['message'] = "Success"
+                return Response(self.response_format, status=status.HTTP_200_OK)
+            elif not serializer.data:
+                self.response_format['status'] = True
+                self.response_format['status_code'] = status.HTTP_404_NOT_FOUND
+                self.response_format['message'] = "No Data"
+                return Response(self.response_format, status=status.HTTP_200_OK)
+        except Exception as e:
+            self.response_format['status'] = True
+            self.response_format['status_code'] = status.HTTP_500_INTERNAL_SERVER_ERROR
+            self.response_format['message'] = "No Data"
+            return Response(self.response_format, status=status.HTTP_200_OK)
 
