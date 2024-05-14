@@ -52,7 +52,7 @@ class EmailExistValidation(serializers.ValidationError):
 class AccountSerializer(serializers.ModelSerializer):
 
     email = CompanyMail(required=True, max_length=30)
-    fullname = serializers.CharField(required=True, max_length=30, validators=[name_validator])
+    fullname = serializers.CharField(required=True, max_length=30)
     password = serializers.CharField(required=True, max_length=20, write_only=True)
     confirm_password = serializers.CharField(required=True, max_length=20, write_only=True)
         
@@ -62,20 +62,20 @@ class AccountSerializer(serializers.ModelSerializer):
 
     def validate_email(self, value):
         if value is None:
-            raise CustomValidation({'email': "Email Field is should not be empty"})
+            raise serializers.ValidationError({'email': "Email Field is should not be empty"})
         elif value:
             user_part, doamin_part = value.rsplit('@', 1)
             host, domain = doamin_part.rsplit('.', 1)
             if host == 'innowave' and domain == 'tech':
                 return value
-            raise CustomValidation({"email": "Please Enter you Innowave Mail"})
+            raise serializers.ValidationError({"email": "Please Enter you Innowave Mail"})
 
     def validate(self, attrs):
         password = attrs.get('password')
-        confirm_password = attrs.get('confirm_password')            
+        confirm_password = attrs.get('confirm_password')
         if password != confirm_password:
             raise serializers.ValidationError({"password": "Password and confirm password Not Matching"})
-        if User.objects.filter(email=attrs.get('email')).exists():
+        if User.objects.filter(email=attrs.get('email')).first():
             raise serializers.ValidationError({"email": "Email Already Exists Please Go with another Email"})
         return attrs
 
@@ -146,18 +146,14 @@ class UserGroupSerializer(serializers.ModelSerializer):
 
 class ProfileSerializer(serializers.ModelSerializer):
 
-    groups = UserGroupSerializer(required=False, read_only=True, many=True)
-
     class Meta:
         model = User
         fields = ['fullname', 'email', 'groups']
 
     def to_representation(self, instance):
         _data = super(ProfileSerializer, self).to_representation(instance)
-        if instance.groups.exists():
-            _data['groups'] = instance.groups.first().name
-        else:
-            _data = None
+        _data['groups'] = instance.groups.name
+        _data['permissions'] = [i.name for i in instance.groups.permissions.all()]
         return _data
 
 
@@ -169,10 +165,11 @@ class UserListSerializer(serializers.ModelSerializer):
 
     def to_representation(self, instance):
         represent = super().to_representation(instance)
-        group = instance.groups.first()
-        if group:
-            represent['groups'] = group.name
-            represent['permissions'] = list(group.permissions.values_list('codename', flat=True))
+        represent['groups'] = instance.groups.name
+        # group = instance.groups.first()
+        # if group:
+        #     represent['groups'] = group.name
+        #     represent['permissions'] = list(group.permissions.values_list('codename', flat=True))
         return represent
 
 
@@ -182,9 +179,9 @@ class UserSerializer(serializers.ModelSerializer):
         model = User
         fields = ('fullname', 'email', 'username', 'groups')
     #
-    # def to_representation(self, instance):
-    #     represent = super().to_representation(instance)
-    #     represent['groups'] = instance.groups.first().name()
-    #     return represent
+    def to_representation(self, instance):
+        represent = super().to_representation(instance)
+        represent['groups'] = instance.groups.name
+        return represent
 
 

@@ -9,5 +9,6 @@ class CustomUserManager(UserManager):
     def create_user(self, username, email=None, password=None, **extra_fields):
         user = super(CustomUserManager, self).create_user(username, email, password, **extra_fields)
         guest_group, _ = Group.objects.get_or_create(name='Guest')
-        user.groups.add(guest_group)
+        user.groups = guest_group
+        user.save(using=self._db)
         return user

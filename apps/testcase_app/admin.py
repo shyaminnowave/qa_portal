@@ -1,5 +1,5 @@
 from django.contrib import admin
-from apps.testcase_app.models import TestCaseModel, TestCaseStep, NatcoStatus
+from apps.testcase_app.models import TestCaseModel, TestCaseStep, NatcoStatus, TestResult
 from simple_history.admin import SimpleHistoryAdmin
 
 # Register your models here.
@@ -21,5 +21,12 @@ class NatcoStatusAdmin(SimpleHistoryAdmin):
     list_display = ['test_case', 'language', 'device', 'status']
 
 
+class TestResultAdmin(admin.ModelAdmin):
+
+    list_display = ['id', 'testcase']
+    list_filter = ['node_id', 'natco', 'stb_release', 'stb_firmware', 'stb_android', 'stb_build']
+
+
 admin.site.register(TestCaseModel, TestCaseModelAdmin)
+admin.site.register(TestResult, TestResultAdmin)
 admin.site.register(NatcoStatus, NatcoStatusAdmin)

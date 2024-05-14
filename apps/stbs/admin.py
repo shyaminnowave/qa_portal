@@ -1,6 +1,6 @@
 from typing import Any
 from django.contrib import admin
-from apps.stbs.models import Language, STBManufacture, Natco,  NactoManufactureLanguage
+from apps.stbs.models import Language, STBManufacture, Natco,  NactoManufactureLanguage, STBInfo, STBSRelease
 from django.contrib.admin.models import LogEntry, CHANGE
 from django.contrib.contenttypes.models import ContentType
 from simple_history.admin import SimpleHistoryAdmin
@@ -10,3 +10,5 @@ admin.site.register(Language, SimpleHistoryAdmin)
 admin.site.register(STBManufacture, SimpleHistoryAdmin)
 admin.site.register(NactoManufactureLanguage, SimpleHistoryAdmin)
 admin.site.register(Natco, SimpleHistoryAdmin)
+admin.site.register(STBInfo)
+admin.site.register(STBSRelease)

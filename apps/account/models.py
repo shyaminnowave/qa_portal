@@ -1,7 +1,7 @@
 import re
 from django.db import models
 from django_extensions.db.models import TimeStampedModel
-from django.contrib.auth.models import AbstractBaseUser, PermissionsMixin, AbstractUser, UserManager
+from django.contrib.auth.models import AbstractBaseUser, PermissionsMixin, AbstractUser, UserManager, Group, Permission
 from django.contrib.auth.validators import UnicodeUsernameValidator
 from django.core.validators import validate_email
 from django.utils.translation import gettext_lazy as _
@@ -9,6 +9,7 @@ from django.utils import timezone
 from django.core.validators import EmailValidator, ValidationError
 from apps.account.managers import CustomUserManager
 from apps.account.fields import CompanyEmail
+
 # Create your models here.contrib.
 
 
@@ -18,9 +19,28 @@ class IntTechEmailValidator(EmailValidator):
         print("True")
         if not value.endswith('@int.tech'):
             raise ValidationError(_('Email domain must be int.tech'))
+        
+
+class CustomPermissionMixin(PermissionsMixin):
+
+    groups = models.ForeignKey(Group, on_delete=models.CASCADE, verbose_name=_('groups'), 
+                               blank=True, null=True, related_name="user_set",
+                               related_query_name="user")
+    
+    user_permissions = models.ManyToManyField(
+        Permission,
+        verbose_name=_('user permissions'),
+        blank=True,
+        help_text=_('Specific permissions for this user.'),
+        related_name="user_set",
+        related_query_name="user",
+    )
+
+    class Meta:
+        abstract = True
 
 
-class Account(AbstractBaseUser, PermissionsMixin, TimeStampedModel):
+class Account(AbstractBaseUser, CustomPermissionMixin, TimeStampedModel):
 
     username_validator = UnicodeUsernameValidator()
 
@@ -38,7 +58,7 @@ class Account(AbstractBaseUser, PermissionsMixin, TimeStampedModel):
     is_staff = models.BooleanField(
         _('staff status'), default=False, help_text=_('Designates whether the user can log into this admin site.')
     )
-    is_active = models.BooleanField(_("_active"), default=True, help_text=_(
+    is_active = models.BooleanField(_("active status"), default=True, help_text=_(
             'Designates whether this user should be treated as active. '
             'Unselect this instead of deleting accounts.'
         ),
