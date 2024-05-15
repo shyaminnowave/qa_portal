@@ -2,7 +2,7 @@ from rest_framework.views import Response
 from rest_framework import generics
 from apps.testcase_app.models import TestCaseModel, TestCaseStep, NatcoStatus, TestResult
 from apps.testcase_app.apis.serializers import TestCaseSerializerList, TestCaseSerializer, ExcelSerializer, \
-        NatcoStatusSerializer, TestCaseStatusUpdateSerializer, TestResultDRPSerializer
+        NatcoStatusSerializer, TestCaseStatusUpdateSerializer, TestResultDRPSerializer, DistinctTestResultSerializer
 from apps.stbs.models import NactoManufactureLanguage
 from rest_framework.response import Response
 from django.shortcuts import get_object_or_404
@@ -25,6 +25,7 @@ from django.db.models import OuterRef, Subquery
 from django.views.generic import TemplateView
 from rest_framework.views import APIView
 from rest_framework import status
+from django.db.models import Min
 import json
 
 
@@ -169,20 +170,8 @@ class TestResultFilterView(generics.GenericAPIView):
     serializer_class = TestResultDRPSerializer
 
     def get_queryset(self):
-        _queryset = dict()
-        _node = TestResult.get_unique_node()
-        _natco_type = TestResult.get_unique_natco_type()
-        _stb_release = TestResult.get_unique_stb_release()
-        _stb_android = TestResult.get_unique_stb_android()
-        _stb_firmware = TestResult.get_unique_stb_firmware()
-        _queryset = {
-            'node_id': _node,
-            'natco_type': _natco_type,
-            'stb_release': _stb_release,
-            'stb_android': _stb_android,
-            'stb_firmware': _stb_firmware
-        }
-        return _queryset
+        queryset = TestResult.get_unique_filters()
+        return queryset
 
     def get(self, request, *args, **kwargs):
         queryset = self.get_queryset()
@@ -193,6 +182,41 @@ class TestResultFilterView(generics.GenericAPIView):
             self.response_format['message'] = 'Success'
             return Response(self.response_format, status=status.HTTP_200_OK)
         if not queryset:
+            self.response_format['success'] = False
+            self.response_format['status_code'] = status.HTTP_400_BAD_REQUEST
+            self.response_format['message'] = 'Error'
+            return Response(self.response_format, status=status.HTTP_200_OK)
+        return Response(self.response_format, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+class TestCaseReportView(generics.GenericAPIView):
+
+    def __init__(self, **kwargs):
+        self.response_format = ResponseInfo().response
+        super().__init__(**kwargs)
+
+    serializer_class = DistinctTestResultSerializer
+    
+    def get_queryset(self):
+        results = TestResult.objects.values('testcase', 'natco').annotate(min_cpu=Min('cpu_usage'), min_ram=Min('ram_usage'), min_time=Min('load_time'))
+
+        # Now, let's filter the results to get the distinct testcase and distinct natco with the minimum values
+        distinct_results = []
+        for result in results:
+            distinct_result = TestResult.objects.filter(testcase=result['testcase'], natco=result['natco'], cpu_usage=result['min_cpu'], ram_usage=result['min_ram'], load_time=result['min_time']).first()
+            if distinct_result:
+                distinct_results.append(distinct_result)
+        return distinct_results
+    
+    def get(self, request, *args, **kwargs):
+        serializer = self.get_serializer(self.get_queryset(), many=True)
+        if serializer.data:
+            self.response_format['success'] = True
+            self.response_format['status_code'] = status.HTTP_200_OK
+            self.response_format['data'] = serializer.data
+            self.response_format['message'] = 'Success'
+            return Response(self.response_format, status=status.HTTP_200_OK)
+        if not serializer.data:
             self.response_format['success'] = False
             self.response_format['status_code'] = status.HTTP_400_BAD_REQUEST
             self.response_format['message'] = 'Error'
@@ -258,7 +282,7 @@ class GetTestResult(generics.GenericAPIView):
         
 
 
-class GetExcel(generics.GenericAPIView):
+class GetTestCase(generics.GenericAPIView):
 
     def __init__(self, **kwargs) -> None:
         self.response_format = ResponseInfo().response

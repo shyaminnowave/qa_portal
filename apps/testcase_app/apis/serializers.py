@@ -1,8 +1,7 @@
 import re
 
 from rest_framework import serializers
-from apps.testcase_app.models import TestCaseModel, TestCaseStep, NatcoStatus
-from apps.stbs.models import Natco
+from apps.testcase_app.models import TestCaseModel, TestCaseStep, NatcoStatus, TestResult
 from apps.stbs.apis.serializers import NactoSerializer
 
 class TestCaseSerializerList(serializers.ModelSerializer):
@@ -80,3 +79,22 @@ class TestResultDRPSerializer(serializers.Serializer):
 class ExcelSerializer(serializers.Serializer):
 
     file = serializers.FileField()
+
+
+class TestResultSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = TestResult
+        fields = '__all__'
+
+class DistinctTestResultSerializer(serializers.Serializer):
+    testcase = serializers.CharField()
+    natco = serializers.CharField()
+    cpu_usage = serializers.CharField()
+    ram_usage = serializers.CharField()
+    load_time = serializers.CharField()
+
+    def get_min_cpu(self, obj):
+        return obj['min_cpu']
+
+    def get_min_ram(self, obj):
+        return obj['min_ram']

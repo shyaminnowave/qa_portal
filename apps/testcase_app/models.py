@@ -164,7 +164,6 @@ class TestResult(TimeStampedModel):
     date = models.CharField(max_length=200, default='')
     iteration_number = models.CharField(max_length=200, default='')
     testcase = models.CharField(max_length=255, default='')
-    load_time = models.CharField(max_length=200, default='')
     cpu = models.CharField(max_length=200, default='')
     ram = models.CharField(max_length=200, default='')
     start_time = models.CharField(max_length=200, default='')
@@ -182,7 +181,7 @@ class TestResult(TimeStampedModel):
     stb_firmware = models.CharField(max_length=200, default='')
     stb_android = models.CharField(max_length=200, default='')
     stb_build = models.CharField(max_length=255, default='')
-    natoc_node = models.CharField(max_length=200, default='')
+    natco_node = models.CharField(max_length=200, default='')
     comment = models.CharField(max_length=200, default='')
 
     def __str__(self):
@@ -200,8 +199,8 @@ class TestResult(TimeStampedModel):
 
     @classmethod
     def get_unique_node(cls):  
-        node_id = cls.objects.values_list('natoc_nodes', flat=True).distinct()
-        return node_id
+        natco_node = cls.objects.values_list('natoc_node', flat=True).distinct()
+        return natco_node
 
     @classmethod
     def get_unique_natco_type(cls):
@@ -226,7 +225,7 @@ class TestResult(TimeStampedModel):
     @classmethod
     def get_unique_filters(cls):
         _filter = {
-            'node_id': cls.objects.values_list('natco', flat=True).distinct(),
+            'natco_node': cls.objects.values_list('natco_node', flat=True).distinct(),
             'natco_type': cls.objects.values_list('natco', flat=True).distinct(),
             'stb_release': cls.objects.values_list('stb_release', flat=True).distinct(),
             'stb_android': cls.objects.values_list('stb_android', flat=True).distinct(),
