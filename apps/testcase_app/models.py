@@ -11,58 +11,52 @@ from ckeditor.fields import RichTextField
 
 User = get_user_model()
 
+#-------------- Choices Enum ------------------------
+
+class PriorityChoice(models.TextChoices):
+    CLASSONE = 'class_1', _('Class 1')
+    CLASSTWO = 'class_2', _('Class 2')
+    CLASSTHREE = 'class_3', _('Class 3')
+
+
+class StatusChoices(models.TextChoices):
+    TODO = 'todo', _('Todo')
+    ONGOING = 'ongoing', _('Ongoing')
+    COMPLETED = 'completed', _('Completed')
+
+
+class AutomationChoices(models.TextChoices):
+    AUTOMATABLE = 'automatabel', _('Automatabel')
+    NOT_AUTOMATABLE = 'not-automatable', _('Not-Automatable')
+    IN_DEVELOPMENT = 'in-development', _('In-Development')
+    REVIEW = 'review', _('Review')
+    READY = 'ready', _('Ready')
+    COMPLETE = StatusChoices.COMPLETED
+
+
+class TestCaseChoices(models.TextChoices):
+
+    PERFORMANCE = 'performance', _('Perfomance')
+    SOAK = 'soak', _('Soak')
+    SMOKE = 'smoke', _('Smoke')
+
+#----------------------------------------------------
+
 
 class TestCaseModel(TimeStampedModel):
 
-    # class PriorityChoice(models.TextChoices):
-    #     CLASSTHREE = 'class_3', _('Class 3')
-
-    TODO = 'todo'
-    ONGOING = 'ongoing'
-    COMPLETED = 'completed'
-
-    AUTOMATABLE = 'automatabel'
-    NOT_AUTOMATABLE = 'not-automatable'
-    IN_DEVELOPMENT = 'in-development'
-    REVIEW = 'review'
-    READY = 'ready'
-
-    PERFORMANCE = 'performance'
-    SOAK = 'soak'
-    SMOKE = 'smoke'
-    
-    AUTOMATION_CHOICES = (
-        (NOT_AUTOMATABLE, 'Not-Automatable'),  #automatable
-        (IN_DEVELOPMENT, 'In-Development'),
-        (REVIEW, 'Review'),
-        (READY, 'Ready'),
-        (COMPLETED, 'Completed')
-    )
-
-    STATUS_CHOICES = (
-        (TODO, 'Todo'),
-        (ONGOING, 'On-Going'),
-        (COMPLETED, 'Completed')
-    )
-
-    TESTCASE_CHOICES = (
-        (PERFORMANCE, 'performance'),
-        (SOAK, 'soak'),
-        (SMOKE, 'smoke')
-    )
-
     jira_id = models.IntegerField(_("Jira Id"), primary_key=True, unique=True, help_text=("Jira Id"))
     test_name = models.CharField(_("Test Report Name"), max_length=255, help_text=("Please Enter the TestCase Name"))
-    priority = models.CharField(max_length=20, default='Class 3')
+    priority = models.CharField(max_length=20, choices=PriorityChoice.choices, default=PriorityChoice.CLASSTHREE)
     jira_summary = models.TextField(_("Jira Summary"))
     test_description = models.TextField(_('TestCase Description'))
-    testcase_type = models.CharField(choices=TESTCASE_CHOICES, max_length=20, default=PERFORMANCE)
+    testcase_type = models.CharField(max_length=20, choices=TestCaseChoices.choices,  default=TestCaseChoices.SMOKE)
     comments = models.TextField(blank=True, null=True)
     defects = models.TextField(blank=True, null=True)
-    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default=ONGOING)
+    status = models.CharField(max_length=20, choices=StatusChoices.choices, default=StatusChoices.ONGOING)
     script_name = models.CharField(max_length=50, blank=True, null=True)
     script = models.CharField(max_length=255, blank=True, null=True)
-    automation_status = models.CharField(max_length=20, choices=AUTOMATION_CHOICES, default=AUTOMATABLE)
+    automation_status = models.CharField(max_length=20, choices=AutomationChoices.choices, default=AutomationChoices.AUTOMATABLE)
     history = HistoricalRecords()
 
     class Meta:
@@ -90,25 +84,19 @@ class TestCaseModel(TimeStampedModel):
 
 class NatcoStatus(TimeStampedModel):
 
-    IN_DEVELOPMENT = 'in_development'
-    NOT_AUTOMATABLE = 'not_automatable'
-    MANUAL = 'manual'
-    COMPLETE = 'complete'
-    READY = 'READY'
-
-    STATUS_CHOICES = (
-        (IN_DEVELOPMENT, 'IN Development'),
-        (NOT_AUTOMATABLE, 'Not Automatable'),
-        (MANUAL, 'Manual'),
-        (COMPLETE, 'Complete'),
-        (READY, 'Ready')
-    )
+    class NatcoStatusChoice(models.TextChoices):
+        AUTOMATABLE = AutomationChoices.AUTOMATABLE
+        NOT_AUTOMATABLE = AutomationChoices.NOT_AUTOMATABLE
+        IN_DEVELOPMENT = AutomationChoices.IN_DEVELOPMENT
+        REVIEW = AutomationChoices.REVIEW
+        READY = AutomationChoices.READY
+        MANUAL = 'manual', _('Manual')
 
     natco = models.ForeignKey(Natco, on_delete=models.CASCADE, related_name='natco_status')
     language = models.ForeignKey(Language, on_delete=models.CASCADE)
     device = models.ForeignKey(STBManufacture, on_delete=models.CASCADE)
     test_case = models.ForeignKey(TestCaseModel, on_delete=models.CASCADE, related_name='natco_status')
-    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default=MANUAL)
+    status = models.CharField(max_length=20, choices=NatcoStatusChoice.choices, default=NatcoStatusChoice.MANUAL)
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='user_natco', blank=True, null=True)
     reviewed_by = models.ForeignKey(User, on_delete=models.CASCADE, related_name='natco_reviewer', blank=True, null=True)
     modified = models.ForeignKey(User, on_delete=models.CASCADE, related_name='natoc_modified', blank=True, null=True)
@@ -137,23 +125,13 @@ class NatcoStatus(TimeStampedModel):
 
 class TestCaseStep(TimeStampedModel):
 
-    TODO = 'todo'
-    ONGOING = 'ongoing'
-    COMPLETED = 'completed'
-
-    STATUS_CHOICES = (
-        (TODO, 'Todo'),
-        (ONGOING, 'On-Going'),
-        (COMPLETED, 'Completed')
-    )
-
     testcase = models.ForeignKey(TestCaseModel, on_delete=models.CASCADE, related_name='test_steps', blank=True,
                                  null=True)
     step_id = models.IntegerField(_("step number"), blank=True, null=True)
     step_data = models.TextField(_('Testing Parameters'), blank=True, null=True)
     step_description = models.TextField(blank=True, null=True)
     excepted_result = models.TextField(blank=True, null=True)
-    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default=TODO)
+    status = models.CharField(max_length=20, choices=StatusChoices.choices, default=StatusChoices.TODO)
     history = HistoricalRecords()
 
 

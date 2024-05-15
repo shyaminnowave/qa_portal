@@ -2,7 +2,7 @@ from rest_framework.views import Response
 from rest_framework import generics
 from apps.testcase_app.models import TestCaseModel, TestCaseStep, NatcoStatus, TestResult
 from apps.testcase_app.apis.serializers import TestCaseSerializerList, TestCaseSerializer, ExcelSerializer, \
-        NatcoStatusSerializer, TestCaseStatusUpdateSerializer, TestResultDRPSerializer, DistinctTestResultSerializer
+        NatcoStatusSerializer, TestCaseStatusUpdateSerializer, DistinctTestResultSerializer, TestResultSerializer, TestResultDRPSerializer
 from apps.stbs.models import NactoManufactureLanguage
 from rest_framework.response import Response
 from django.shortcuts import get_object_or_404
@@ -133,7 +133,7 @@ class TestCaseNatcoList(generics.ListAPIView):
                              location=OpenApiParameter.QUERY),
             OpenApiParameter(name='status', description="Choose a Status", required=False,
                              type=OpenApiTypes.STR,
-                             location=OpenApiParameter.QUERY, enum=NatcoStatus.STATUS_CHOICES),
+                             location=OpenApiParameter.QUERY, enum=NatcoStatus.NatcoStatusChoice.choices),
         ]
     )
     def list(self, request, *args, **kwargs):
@@ -262,7 +262,7 @@ class GetTestResult(generics.GenericAPIView):
                     'stb_firmware' : row[19], 
                     'stb_android' : row[20], 
                     'stb_build' : row[21], 
-                    'natoc_node' : row[22], 
+                    'natco_node' : row[22], 
                     'comment' : row[23], 
                 }
                 _test_result.append(TestResult(**_data))
@@ -272,7 +272,7 @@ class GetTestResult(generics.GenericAPIView):
             self.response_format['status'] = False
             self.response_format['status_code'] = status.HTTP_400_BAD_REQUEST
             self.response_format['data'] = 'Error'
-            self.response_format['massage'] = "mesga"
+            self.response_format['massage'] = str(e)
             return Response(self.response_format, status=status.HTTP_400_BAD_REQUEST)
         self.response_format['status'] = True
         self.response_format['status_code'] = status.HTTP_200_OK
@@ -308,9 +308,9 @@ class GetTestCase(generics.GenericAPIView):
                     jira_id_parts = str(row[2]).split('-')
                     _data = {
                         "jira_id": jira_id_parts[-1],
-                        "jira_summary": row[6],
+                        "jira_summary": row[7],
                         "test_description": row[7],
-                        "test_name": f"TestCase - {jira_id_parts[-1]}"
+                        "test_name": row[6]
                     }
                     testcase_list.append(TestCaseModel(**_data))
                     test_case = jira_id_parts[-1]
