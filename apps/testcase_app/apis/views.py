@@ -310,9 +310,9 @@ class GetTestCase(generics.GenericAPIView):
                     jira_id_parts = str(row[2]).split('-')
                     _data = {
                         "jira_id": jira_id_parts[-1],
-                        "jira_summary": row[3],
-                        "test_description": row[4],
-                        "test_name": row[1],
+                        "jira_summary": row[7],
+                        "test_description": row[7],
+                        "test_name": row[6],
                         'testcase_type': TestCaseChoices.PERFORMANCE
                     }
                     testcase_list.append(TestCaseModel(**_data))
@@ -320,22 +320,22 @@ class GetTestCase(generics.GenericAPIView):
                     for data in natco:
                         natco_list.append(NatcoStatus(natco=data.natco, language=data.language_name,
                                                       device=data.device_name, test_case_id=test_case))
-                    if row[2] and row[5]:
+                    if row[2] and row[8]:
                         _step_data = {
                         "testcase_id": test_case,
-                        "step_id": int(row[5]),
-                        "step_action": row[6],
+                        "step_id": int(row[8]),
+                        "step_action": row[9],
                         "step_data": '',
-                        "excepted_result": row[8]
+                        "excepted_result": row[10]
                         }
                     step_list.append(TestCaseStep(**_step_data))
                 elif row[2] is None and row[5] is not None:
                     _step_data = {
                         "testcase_id": test_case,
-                        "step_id": int(row[5]),
-                        "step_action": row[6],
+                        "step_id": int(row[8]),
+                        "step_action": row[9],
                         "step_data": '',
-                        "excepted_result": row[8]
+                        "excepted_result": row[10]
                     }
                     step_list.append(TestCaseStep(**_step_data))
                 elif row[2] is None and row[5] is None:
