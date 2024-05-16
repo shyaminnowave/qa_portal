@@ -8,7 +8,7 @@ class TestCaseSerializerList(serializers.ModelSerializer):
 
     class Meta:
         model = TestCaseModel
-        fields = ('jira_id', 'test_name', 'test_description', 'testcase_type', 'jira_summary',
+        fields = ('get_jira_id', 'test_name', 'priority', 'testcase_type',
                   'status', 'automation_status')
 
 
@@ -30,7 +30,7 @@ class TestStepSerializer(serializers.ModelSerializer):
     
     class Meta:
         model = TestCaseStep
-        fields = ('testcase', 'step_id', 'step_data', 'step_description', 'excepted_result')
+        fields = ('testcase', 'step_id', 'step_data', 'step_action', 'excepted_result')
 
 
 class NatcoStatusSerializer(serializers.ModelSerializer):

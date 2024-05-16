@@ -76,10 +76,13 @@ class TestCaseModel(TimeStampedModel):
         return '%s' % self.test_name
 
     def get_jira_id(self) -> str:
-        return 'TTVTM - %s' % self.jira_id
+        return 'TTVTM-%s' % self.jira_id
     
     def get_status(self) -> str:
         return '%s' % self.status
+
+    def get_short_descript(self) -> str:
+        return self.test_description
 
 
 class NatcoStatus(TimeStampedModel):
@@ -129,7 +132,7 @@ class TestCaseStep(TimeStampedModel):
                                  null=True)
     step_id = models.IntegerField(_("step number"), blank=True, null=True)
     step_data = models.TextField(_('Testing Parameters'), blank=True, null=True)
-    step_description = models.TextField(blank=True, null=True)
+    step_action = models.TextField(blank=True, null=True)
     excepted_result = models.TextField(blank=True, null=True)
     status = models.CharField(max_length=20, choices=StatusChoices.choices, default=StatusChoices.TODO)
     history = HistoricalRecords()

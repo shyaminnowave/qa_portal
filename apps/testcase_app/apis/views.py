@@ -1,6 +1,6 @@
 from rest_framework.views import Response
 from rest_framework import generics
-from apps.testcase_app.models import TestCaseModel, TestCaseStep, NatcoStatus, TestResult
+from apps.testcase_app.models import TestCaseModel, TestCaseStep, NatcoStatus, TestResult, TestCaseChoices
 from apps.testcase_app.apis.serializers import TestCaseSerializerList, TestCaseSerializer, ExcelSerializer, \
         NatcoStatusSerializer, TestCaseStatusUpdateSerializer, DistinctTestResultSerializer, TestResultSerializer, TestResultDRPSerializer
 from apps.stbs.models import NactoManufactureLanguage
@@ -58,11 +58,13 @@ class TestCaseListView(generics.ListAPIView):
 
     # authentication_classes = [JWTAuthentication]
     # permission_classes = [AdminPermission]
-    queryset = TestCaseModel.objects.all()
+    queryset = TestCaseModel.objects.only('jira_id', 'test_name', 'priority', 'testcase_type', 'status', 'automation_status').all()
     serializer_class = TestCaseSerializerList
     pagination_class = CustomPagination
     filter_backends = [filters.DjangoFilterBackend]
     filterset_fields = ('jira_id', 'test_name', 'status', 'automation_status')
+
+
 
     def get(self, request, *args, **kwargs):
         queryset = self.filter_queryset(self.get_queryset())
@@ -308,34 +310,35 @@ class GetTestCase(generics.GenericAPIView):
                     jira_id_parts = str(row[2]).split('-')
                     _data = {
                         "jira_id": jira_id_parts[-1],
-                        "jira_summary": row[7],
-                        "test_description": row[7],
-                        "test_name": row[6]
+                        "jira_summary": row[3],
+                        "test_description": row[4],
+                        "test_name": row[1],
+                        'testcase_type': TestCaseChoices.PERFORMANCE
                     }
                     testcase_list.append(TestCaseModel(**_data))
                     test_case = jira_id_parts[-1]
                     for data in natco:
                         natco_list.append(NatcoStatus(natco=data.natco, language=data.language_name,
                                                       device=data.device_name, test_case_id=test_case))
-                    if row[2] and row[8]:
+                    if row[2] and row[5]:
                         _step_data = {
                         "testcase_id": test_case,
-                        "step_id": int(row[8]),
-                        "step_description": row[9],
+                        "step_id": int(row[5]),
+                        "step_action": row[6],
                         "step_data": '',
-                        "excepted_result": row[10]
+                        "excepted_result": row[8]
                         }
                     step_list.append(TestCaseStep(**_step_data))
-                elif row[2] is None and row[8] is not None:
+                elif row[2] is None and row[5] is not None:
                     _step_data = {
                         "testcase_id": test_case,
-                        "step_id": int(row[8]),
-                        "step_description": row[9],
+                        "step_id": int(row[5]),
+                        "step_action": row[6],
                         "step_data": '',
-                        "excepted_result": row[10]
+                        "excepted_result": row[8]
                     }
                     step_list.append(TestCaseStep(**_step_data))
-                elif row[2] is None and row[8] is None:
+                elif row[2] is None and row[5] is None:
                     pass
             with transaction.atomic():
                 TestCaseModel.objects.bulk_create(testcase_list)
@@ -344,8 +347,8 @@ class GetTestCase(generics.GenericAPIView):
         except Exception as e:
             self.response_format['status'] = False
             self.response_format['status_code'] = status.HTTP_400_BAD_REQUEST
-            self.response_format['data'] = 'Error'
-            self.response_format['massage'] = "TestCase Upload Failed"
+            # self.response_format['data'] = 'Error'
+            self.response_format['message'] = str(e)
             return Response(self.response_format, status=status.HTTP_400_BAD_REQUEST)
         self.response_format['status'] = True
         self.response_format['status_code'] = status.HTTP_200_OK
