@@ -159,7 +159,7 @@ class TestCaseNatcoDetail(cgenerics.CustomRetrieveUpdateDestroyAPIView):
     lookup_field = 'pk'
 
     def get_object(self):
-        queryset = NatcoStatus.objects.get(id=self.kwargs.get('pk')).select_related('test_case')
+        queryset = NatcoStatus.objects.select_related('test_case').get(id=self.kwargs.get('pk'))
         return queryset
     
 
