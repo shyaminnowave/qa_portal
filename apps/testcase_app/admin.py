@@ -13,8 +13,10 @@ class TestStepAdmin(admin.TabularInline):
 
 class TestCaseModelAdmin(SimpleHistoryAdmin):
 
-    list_display = ['jira_id', 'test_name']
+    list_display = ['jira_id', 'test_name', 'priority', 'testcase_type']
     search_fields = ('jira_id',)
+    list_filter = ('priority', 'testcase_type')
+    list_editable = ('test_name', 'priority', 'testcase_type')
     inlines = [TestStepAdmin]
 
 
