@@ -182,7 +182,7 @@ class PermissionListView(generics.ListAPIView):
 
 class GroupView(generics.ListAPIView):
 
-    permission_classes = [UserPermission]
+    # permission_classes = [UserPermission]
     queryset = Group.objects.all()
     serializer_class = GroupListSerializer
 
