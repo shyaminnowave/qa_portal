@@ -4,8 +4,8 @@ from rest_framework.views import Response
 from rest_framework import generics
 from apps.testcase_app.models import TestCaseModel, TestCaseStep, NatcoStatus, TestResult, TestCaseChoices
 from apps.testcase_app.apis.serializers import TestCaseSerializerList, TestCaseSerializer, ExcelSerializer, \
-        NatcoStatusSerializer, TestCaseStatusUpdateSerializer, DistinctTestResultSerializer, TestResultSerializer, \
-        TestResultDRPSerializer, BulkFieldUpdateSerializer, TestCaseAutomationStatusUpdateSerializer
+        NatcoStatusSerializer, DistinctTestResultSerializer, TestResultSerializer, \
+        TestResultDRPSerializer, BulkFieldUpdateSerializer
 from apps.stbs.models import NactoManufactureLanguage
 from rest_framework.response import Response
 from django.shortcuts import get_object_or_404
@@ -32,85 +32,54 @@ from django.db.models import Min
 import json
 
 
-class BulkUpdateView(generics.GenericAPIView):
+class ResponseTemplateApi:
 
-    model_cls = {
-        'natco-status': NatcoStatus,
-        'testcase': TestCaseModel
-    }
-
-    def __init__(self, **kwargs) -> None:
+    def __init__(self, instance):
         self.response_format = ResponseInfo().response
-        super().__init__(**kwargs)
+        self.instance = instance
+
+    def response(self):
+        if self.instance == True:
+            self.response_format['status'] = True
+            self.response_format['status'] = True
+            self.response_format['status_code'] = status.HTTP_200_OK
+            self.response_format['data'] = "Success"
+            self.response_format['message'] = "Success"
+            return self.response_format
+        else:
+            self.response_format['status'] = False
+            self.response_format['status_code'] = status.HTTP_400_BAD_REQUEST
+            self.response_format['message'] = "error"
+            return Response(self.response_format, status=status.HTTP_400_BAD_REQUEST)
+
+
+class BulkFieldUpdateView(generics.GenericAPIView):
 
     serializer_class = BulkFieldUpdateSerializer
 
     def patch(self, request, *args, **kwargs):
-        serializer = self.get_serializer(data=request.data,
-                                         context={'class': self.model_cls[request.GET.get('table')],
-                                                  'field': request.GET.get('field')})
-        if serializer.is_valid():
-            serializer.update(serializer.validated_data)
-            self.response_format['status'] = True
-            self.response_format['status_code'] = status.HTTP_200_OK
-            self.response_format['data'] = "Success"
-            self.response_format['message'] = "Success"
-            return Response(self.response_format, status=status.HTTP_200_OK)
-        else:
-            self.response_format['status'] = False
-            self.response_format['status_code'] = status.HTTP_400_BAD_REQUEST
-            self.response_format['message'] = "error"
-            return Response(self.response_format, status=status.HTTP_400_BAD_REQUEST)
-
-
-class TestCaseAutomationStatusUpdateView(generics.GenericAPIView):
-
-    def __init__(self, **kwargs) -> None:
-        self.response_format = ResponseInfo().response
-        super().__init__(**kwargs)
-
-    serializer_class = TestCaseAutomationStatusUpdateSerializer
-    queryset = TestCaseModel.objects.all()
-
-    def patch(self, request, *args, **kwargs):
+        kwargs_splitted = kwargs.get('path').split('/')
+        print(kwargs_splitted)
         serializer = self.get_serializer(data=request.data)
         if serializer.is_valid():
-            serializer.update(serializer.validated_data)
-            self.response_format['status'] = True
-            self.response_format['status_code'] = status.HTTP_200_OK
-            self.response_format['data'] = "Success"
-            self.response_format['message'] = "Success"
-            return Response(self.response_format, status=status.HTTP_200_OK)
-        else:
-            self.response_format['status'] = False
-            self.response_format['status_code'] = status.HTTP_400_BAD_REQUEST
-            self.response_format['message'] = "error"
-            return Response(self.response_format, status=status.HTTP_400_BAD_REQUEST)
-
-
-class TestCaseStatusUpdateView(generics.GenericAPIView):
-
-    def __init__(self, **kwargs) -> None:
-        self.response_format = ResponseInfo().response
-        super().__init__(**kwargs)
-
-    serializer_class = TestCaseStatusUpdateSerializer
-    queryset = TestCaseModel.objects.all()
-
-    def patch(self, request, *args, **kwargs):
-        serializer = self.get_serializer(data=request.data)
-        if serializer.is_valid():
-            serializer.update(serializer.validated_data)
-            self.response_format['status'] = True
-            self.response_format['status_code'] = status.HTTP_200_OK
-            self.response_format['data'] = "Success"
-            self.response_format['message'] = "Success"
-            return Response(self.response_format, status=status.HTTP_200_OK)
-        else:
-            self.response_format['status'] = False
-            self.response_format['status_code'] = status.HTTP_400_BAD_REQUEST
-            self.response_format['message'] = "error"
-            return Response(self.response_format, status=status.HTTP_400_BAD_REQUEST)
+            match kwargs_splitted[0]:
+                case "status":
+                    instance = serializer.update_testcase_status(serializer.validated_data)
+                case "automation-status":
+                    instance = serializer.update_testcase_automation(serializer.validated_data)
+                case "natco":
+                    match kwargs_splitted[1]:
+                        case "status":
+                            instance = serializer.update_natco_status(serializer.validated_data)
+                        case _:
+                            instance = False
+                case _:
+                    instance = False
+            response_template = ResponseTemplateApi(instance)
+            return Response(response_template.response(),
+                            status=status.HTTP_200_OK if instance else status.HTTP_400_BAD_REQUEST)
+        return Response({"status": False, "status_code": status.HTTP_400_BAD_REQUEST, "message": "Invalid data"},
+                        status=status.HTTP_400_BAD_REQUEST)
 
 
 class TestCaseListView(generics.ListAPIView):
