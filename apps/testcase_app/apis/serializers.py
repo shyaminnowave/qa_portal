@@ -1,8 +1,8 @@
 import re
-
 from rest_framework import serializers
 from apps.testcase_app.models import TestCaseModel, TestCaseStep, NatcoStatus, TestResult
 from apps.stbs.apis.serializers import NactoSerializer
+
 
 class TestCaseSerializerList(serializers.ModelSerializer):
 
@@ -10,6 +10,55 @@ class TestCaseSerializerList(serializers.ModelSerializer):
         model = TestCaseModel
         fields = ('get_jira_id', 'test_name', 'priority', 'testcase_type',
                   'status', 'automation_status')
+
+
+class BulkFieldUpdateSerializer(serializers.Serializer):
+
+    @staticmethod
+    def get_corresponding_query(cls, _field, validated_data):
+        _querysets = {
+            'automation_status': [cls.objects.get(jira_id=i) for i in validated_data.get('id_fields')],
+            'test_status': [cls.objects.get(jira_id=i) for i in validated_data.get('id_fields')],
+            # 'natco_status': [cls.objects.get(id=i) for i in validated_data.get('id_fields')]
+        }
+        if _field in _querysets:
+            print('hello')
+            return _field, _querysets[_field]
+        else:
+            raise KeyError(f"Field {_field} not found in querysets")
+
+    id_fields = serializers.ListField(child=serializers.IntegerField())
+    field = serializers.CharField()
+
+    def update(self, validated_data, instance=None):
+        cls = self.context.get('class')
+        _field = self.context.get('field')
+        key, _instance = self.get_corresponding_query(cls, _field, validated_data)
+        print(_field, _instance)
+        _status = validated_data.get('field', None)
+        for _inst in _instance:
+            _inst.field = _status
+        if key == 'automation_status':
+            print(key)
+            cls.objects.bulk_update(_instance, fields=['automation_status'])
+        elif _field == 'test_status':
+            cls.objects.bulk_update(_instance, fields=['status'])
+        return instance
+
+
+class TestCaseAutomationStatusUpdateSerializer(serializers.Serializer):
+
+    jira_id = serializers.ListField(child=serializers.IntegerField())
+    automation_status = serializers.CharField(required=True)
+
+    def update(self, validated_data, instance=None):
+        _testcase = [TestCaseModel.objects.get(jira_id=test_case) for test_case in validated_data.get('jira_id')]
+        _status = validated_data.get('automation_status', None)
+        print(_status)
+        for _test in _testcase:
+            _test.automation_status = _status
+        TestCaseModel.objects.bulk_update(_testcase, fields=['automation_status'])
+        return instance
 
 
 class TestCaseStatusUpdateSerializer(serializers.Serializer):
@@ -85,6 +134,7 @@ class TestResultSerializer(serializers.ModelSerializer):
     class Meta:
         model = TestResult
         fields = '__all__'
+
 
 class DistinctTestResultSerializer(serializers.Serializer):
     testcase = serializers.CharField()

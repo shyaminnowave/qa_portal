@@ -1,8 +1,11 @@
+import enum
+
 from rest_framework.views import Response
 from rest_framework import generics
 from apps.testcase_app.models import TestCaseModel, TestCaseStep, NatcoStatus, TestResult, TestCaseChoices
 from apps.testcase_app.apis.serializers import TestCaseSerializerList, TestCaseSerializer, ExcelSerializer, \
-        NatcoStatusSerializer, TestCaseStatusUpdateSerializer, DistinctTestResultSerializer, TestResultSerializer, TestResultDRPSerializer
+        NatcoStatusSerializer, TestCaseStatusUpdateSerializer, DistinctTestResultSerializer, TestResultSerializer, \
+        TestResultDRPSerializer, BulkFieldUpdateSerializer, TestCaseAutomationStatusUpdateSerializer
 from apps.stbs.models import NactoManufactureLanguage
 from rest_framework.response import Response
 from django.shortcuts import get_object_or_404
@@ -27,6 +30,62 @@ from rest_framework.views import APIView
 from rest_framework import status
 from django.db.models import Min
 import json
+
+
+class BulkUpdateView(generics.GenericAPIView):
+
+    model_cls = {
+        'natco-status': NatcoStatus,
+        'testcase': TestCaseModel
+    }
+
+    def __init__(self, **kwargs) -> None:
+        self.response_format = ResponseInfo().response
+        super().__init__(**kwargs)
+
+    serializer_class = BulkFieldUpdateSerializer
+
+    def patch(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data,
+                                         context={'class': self.model_cls[request.GET.get('table')],
+                                                  'field': request.GET.get('field')})
+        if serializer.is_valid():
+            serializer.update(serializer.validated_data)
+            self.response_format['status'] = True
+            self.response_format['status_code'] = status.HTTP_200_OK
+            self.response_format['data'] = "Success"
+            self.response_format['message'] = "Success"
+            return Response(self.response_format, status=status.HTTP_200_OK)
+        else:
+            self.response_format['status'] = False
+            self.response_format['status_code'] = status.HTTP_400_BAD_REQUEST
+            self.response_format['message'] = "error"
+            return Response(self.response_format, status=status.HTTP_400_BAD_REQUEST)
+
+
+class TestCaseAutomationStatusUpdateView(generics.GenericAPIView):
+
+    def __init__(self, **kwargs) -> None:
+        self.response_format = ResponseInfo().response
+        super().__init__(**kwargs)
+
+    serializer_class = TestCaseAutomationStatusUpdateSerializer
+    queryset = TestCaseModel.objects.all()
+
+    def patch(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        if serializer.is_valid():
+            serializer.update(serializer.validated_data)
+            self.response_format['status'] = True
+            self.response_format['status_code'] = status.HTTP_200_OK
+            self.response_format['data'] = "Success"
+            self.response_format['message'] = "Success"
+            return Response(self.response_format, status=status.HTTP_200_OK)
+        else:
+            self.response_format['status'] = False
+            self.response_format['status_code'] = status.HTTP_400_BAD_REQUEST
+            self.response_format['message'] = "error"
+            return Response(self.response_format, status=status.HTTP_400_BAD_REQUEST)
 
 
 class TestCaseStatusUpdateView(generics.GenericAPIView):
@@ -62,8 +121,7 @@ class TestCaseListView(generics.ListAPIView):
     serializer_class = TestCaseSerializerList
     pagination_class = CustomPagination
     filter_backends = [filters.DjangoFilterBackend]
-    filterset_fields = ('jira_id', 'test_name', 'status', 'automation_status')
-
+    filterset_fields = ('jira_id', 'test_name', 'status', 'priority', 'automation_status')
 
 
     def get(self, request, *args, **kwargs):
