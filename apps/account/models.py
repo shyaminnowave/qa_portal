@@ -9,8 +9,22 @@ from django.utils import timezone
 from django.core.validators import EmailValidator, ValidationError
 from apps.account.managers import CustomUserManager
 from apps.account.fields import CompanyEmail
+from django.conf import settings
 
 # Create your models here.contrib.
+
+
+class UserDateTimeModel(TimeStampedModel):
+
+    created_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, blank=True, null=True)
+
+    def save(self, **kwargs):
+        if self.created_by is None:
+            self.created_by = kwargs.pop('created_by')
+        super().save(**kwargs)
+
+    class Meta:
+        abstract = True
 
 
 class IntTechEmailValidator(EmailValidator):

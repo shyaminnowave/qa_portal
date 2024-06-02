@@ -138,7 +138,6 @@ class TestCaseStep(TimeStampedModel):
     history = HistoricalRecords()
 
 
-
 class TestResult(TimeStampedModel):
 
     run_type = models.CharField(max_length=200, default='')
@@ -213,6 +212,22 @@ class TestResult(TimeStampedModel):
             'stb_firmware': cls.objects.values_list('stb_firmware', flat=True).distinct()
         }
         return _filter
+
+
+class TestCaseScript(models.Model):
+
+    testcase = models.ForeignKey(TestCaseModel, on_delete=models.SET_NULL)
+    script_name = models.CharField(max_length=200, default='')
+    script_location = models.URLField()
+    script_type = models.CharField(choices=TestCaseChoices.choices)
+    developed_by = models.ForeignKey(get_user_model(), on_delete=models.SET_NULL)
+    reviewed_by = models.ForeignKey(get_user_model(), on_delete=models.SET_NULL)
+    modified_by = models.ForeignKey(get_user_model(), on_delete=models.SET_NULL)
+    description = models.TextField(default='')
+
+    class Meta:
+        verbose_name = 'TestCase Script'
+        verbose_name_plural = 'TestCase Script'
 
 
 class Organization(TimeStampedModel):
