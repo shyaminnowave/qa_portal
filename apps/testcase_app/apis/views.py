@@ -177,7 +177,7 @@ class TestCaseNatcoList(generics.ListAPIView):
             if serializer:
                 return self.get_paginated_response(serializer.data)
         except Exception as e:
-            return Response({"success": False, "data": str(e)})
+            return Response({"success": False, "data": "Error"})
     
 
 class TestCaseNatcoDetail(cgenerics.CustomRetrieveUpdateDestroyAPIView):
