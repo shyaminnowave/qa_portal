@@ -1,6 +1,8 @@
 import re
 from rest_framework import serializers
 from apps.testcase_app.models import TestCaseModel, TestCaseStep, NatcoStatus, TestResult
+from apps.stbs.models import Natco, NactoManufactureLanguage
+from collections import defaultdict
 from apps.stbs.apis.serializers import NactoSerializer
 
 
@@ -102,6 +104,46 @@ class TestResultSerializer(serializers.ModelSerializer):
     class Meta:
         model = TestResult
         fields = '__all__'
+
+
+class NavbarFilterSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = Natco
+        fields = ('natco', 'manufacture')
+
+    def to_representation(self, instance):
+        rep = super().to_representation(instance)
+        natco = rep.pop('natco')
+        rep['manufacture'] = [i.name for i in instance.manufacture.all()]
+        return {natco: {'device': rep['manufacture']}}
+
+
+class NatcoGraphAPISerializer(serializers.Serializer):
+    natco = serializers.CharField(max_length=200, required=True)
+    avg_load_time = serializers.DecimalField(max_digits=5, decimal_places=4, required=False)
+    avg_cpu_load = serializers.DecimalField(max_digits=5, decimal_places=4, required=False)
+    avg_ram_load = serializers.DecimalField(max_digits=5, decimal_places=4, required=False)
+
+    def __init__(self, *args, **kwargs):
+        request = kwargs['context']['request'] if 'context' in kwargs and 'request' in kwargs['context'] else None
+        if request:
+            if request.path.split('/')[-2] == 'load_time':
+                self.fields = {
+                    'natco': self.fields['natco'],
+                    'avg_load_time': self.fields['avg_load_time']
+                }
+            elif request.path.split('/')[-2] == 'cpu_load':
+                self.fields = {
+                    'natco': self.fields['natco'],
+                    'avg_cpu_load': self.fields['avg_cpu_load']
+                }
+            elif request.path.split('/')[-2] == 'ram_load':
+                self.fields = {
+                    'natco': self.fields['natco'],
+                    'avg_ram_load': self.fields['avg_ram_load']
+                }
+        super().__init__(*args, **kwargs)
 
 
 class DistinctTestResultSerializer(serializers.Serializer):

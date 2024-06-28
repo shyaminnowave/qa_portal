@@ -95,3 +95,7 @@ class DeviceOptionSerializer(serializers.ModelSerializer):
         model = STBManufacture
         fields = ('name',)
 
+
+class ReportFilterSerializer(serializers.Serializer):
+
+    device_name = serializers.CharField(source="device_name__name", required=False)

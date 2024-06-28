@@ -15,7 +15,9 @@ urlpatterns = [
     path('bulk-upload/', views.GetTestCase.as_view()),
     path('upload/test-result/', views.GetTestResult.as_view()),
     path('report-filter/', views.TestResultFilterView.as_view()),
+    path('navbar-filter/', views.NavBarFilter.as_view()),
     path('report-data/', views.TestCaseReportView.as_view()),
+    path('test-route/<str:type>/', views.TestCaseDetailReport.as_view()),
     re_path(r"update-bulk/(?P<path>.*)$", views.BulkFieldUpdateView.as_view())
 
 ]

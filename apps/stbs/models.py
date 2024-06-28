@@ -34,6 +34,7 @@ class Natco(TimeStampedModel):
 
     country = models.CharField(max_length=200)
     natco = models.CharField(max_length=10)
+    manufacture = models.ManyToManyField(STBManufacture, blank=True)
     history = HistoricalRecords()
 
     def __str__(self) -> str:
@@ -46,9 +47,9 @@ class Natco(TimeStampedModel):
 
 
 class NactoManufactureLanguage(TimeStampedModel):
-    natco = models.ForeignKey(Natco, on_delete=models.CASCADE)
-    device_name = models.ForeignKey(STBManufacture, on_delete=models.CASCADE)
-    language_name = models.ForeignKey(Language, on_delete=models.CASCADE, related_name='natco_maufacture')
+    natco = models.ForeignKey(Natco, on_delete=models.CASCADE, related_name='natco_info')
+    device_name = models.ForeignKey(STBManufacture, on_delete=models.CASCADE, related_name='natco_manufacture')
+    language_name = models.ForeignKey(Language, on_delete=models.CASCADE, related_name='natco_language')
     history = HistoricalRecords()
 
     def __str__(self) -> str:
@@ -60,20 +61,33 @@ class NactoManufactureLanguage(TimeStampedModel):
         ]
 
 
-class STBInfo(TimeStampedModel):
+class STBNode(TimeStampedModel):
     node_id = models.CharField(max_length=200, default='')
 
+    def __str__(self):
+        return self.node_id
 
-class STBSRelease(TimeStampedModel):
 
-    stb_node = models.ForeignKey(STBInfo, on_delete=models.CASCADE)
-    natco = models.CharField(max_length=255, default='')
+class STBNactoVersions(TimeStampedModel):
+
+    natco = models.ForeignKey(Natco, on_delete=models.CASCADE)
+    version = models.CharField(max_length=200)
+
+    def __str__(self):
+        return f"{self.natco.natco} - {self.version}"
+
+
+class STBRelease(TimeStampedModel):
+
+    stb_node = models.ForeignKey(STBNode, on_delete=models.CASCADE)
+    natco = models.ForeignKey(Natco, on_delete=models.CASCADE, max_length=255, default='')
     stb_build_info = models.CharField(max_length=255, default='')
-    stb_release= models.CharField(max_length=255, default='')
+    stb_release = models.CharField(max_length=255, default='')
     stb_firmware = models.CharField(max_length=255, default='')
     stb_android = models.IntegerField(default=12)
-    country = models.CharField(max_length=200, default='')
-    natco_node = models.CharField(max_length=20, default='')
+
+    def __str__(self):
+        return f"{self.natco.natco} {self.stb_release} {self.stb_android} - {self.stb_node.node_id[-3]}"
 
 
 # class TestIteration(TimeStampedModel):

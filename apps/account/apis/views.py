@@ -160,7 +160,6 @@ class UserListView(generics.ListAPIView):
 
     def get_queryset(self):
         queryset = Account.objects.only('fullname', 'username', 'email', 'groups').prefetch_related('groups').all()
-        print(queryset)
         return queryset
 
 

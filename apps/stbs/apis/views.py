@@ -3,7 +3,8 @@ from rest_framework import generics
 from rest_framework.viewsets import ModelViewSet
 from apps.stbs.models import Language, STBManufacture, Natco, NactoManufactureLanguage
 from apps.stbs.apis.serializers import LanguageSerializer, STBManufactureSerializer, NactoSerializer, \
-    NatcoLanguageSerializer, NatcoOptionSerializer, LanguageOptionSerializer, DeviceOptionSerializer
+    NatcoLanguageSerializer, NatcoOptionSerializer, LanguageOptionSerializer, DeviceOptionSerializer, \
+    ReportFilterSerializer
 from apps.testcase_app.pagination import CustomPagination
 from apps.stbs.mixins import OptionMixin
 from apps.stbs.permissions import LangaugeOptionPermission, NatcoOptionPermission, DeviceOptionPermission, \
@@ -13,6 +14,7 @@ from drf_spectacular.openapi import OpenApiTypes, OpenApiExample
 from qa_backend.helpers.renders import ResponseInfo
 from rest_framework import status
 from rest_framework.views import Request, Response
+from django.db.models import Q, Case, When
 
 
 class LanguageViewset(ModelViewSet):
@@ -83,6 +85,7 @@ class NatcoOptionView(OptionMixin, generics.GenericAPIView):
             self.response_format['message'] = "No Data"
             return Response(self.response_format, status=status.HTTP_200_OK)
 
+
 class LanguageOptionView(OptionMixin, generics.GenericAPIView):
 
     def __init__(self, **kwargs: Any) -> None:
@@ -141,6 +144,17 @@ class DeviceOptionView(OptionMixin, generics.GenericAPIView):
         except Exception as e:
             self.response_format['status'] = True
             self.response_format['status_code'] = status.HTTP_500_INTERNAL_SERVER_ERROR
-            self.response_format['message'] = "No Data"
+            self.response_format['message'] = str(e)
             return Response(self.response_format, status=status.HTTP_200_OK)
 
+
+class ReportFilterView(generics.GenericAPIView):
+
+    serializer_class = ReportFilterSerializer
+    queryset = NactoManufactureLanguage.objects.filter(natco__natco='HU').\
+                                                       exclude(language_name__language_name='English').\
+                                                       values('device_name__name').annotate()
+
+    def get(self, request, *args, **kwargs):
+        serializer = self.get_serializer(self.get_queryset(), many=True)
+        return Response(serializer.data)

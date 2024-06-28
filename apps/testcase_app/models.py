@@ -153,9 +153,9 @@ class TestResult(TimeStampedModel):
     failure_reason = models.TextField()
     result = models.CharField(max_length=200, default='pass')
     natco = models.CharField(max_length=200, default='')
-    load_time = models.CharField(max_length=200, default='')
-    cpu_usage = models.CharField(max_length=200, default='')
-    ram_usage = models.CharField(max_length=200, default='')
+    load_time = models.DecimalField(max_digits=10, decimal_places=5)
+    cpu_usage = models.DecimalField(max_digits=10, decimal_places=5)
+    ram_usage = models.DecimalField(max_digits=10, decimal_places=5)
     country_code = models.CharField(max_length=200, default='')
     stb_release = models.CharField(max_length=200, default='')
     stb_firmware = models.CharField(max_length=200, default='')
@@ -216,13 +216,17 @@ class TestResult(TimeStampedModel):
 
 class TestCaseScript(models.Model):
 
-    testcase = models.ForeignKey(TestCaseModel, on_delete=models.SET_NULL)
+    testcase = models.ForeignKey(TestCaseModel, on_delete=models.SET_NULL, blank=True, null=True,
+                                 related_name='testcase_script')
     script_name = models.CharField(max_length=200, default='')
     script_location = models.URLField()
-    script_type = models.CharField(choices=TestCaseChoices.choices)
-    developed_by = models.ForeignKey(get_user_model(), on_delete=models.SET_NULL)
-    reviewed_by = models.ForeignKey(get_user_model(), on_delete=models.SET_NULL)
-    modified_by = models.ForeignKey(get_user_model(), on_delete=models.SET_NULL)
+    script_type = models.CharField(choices=TestCaseChoices.choices, max_length=20)
+    developed_by = models.ForeignKey(get_user_model(), on_delete=models.SET_NULL, blank=True, null=True,
+                                     related_name='script_developed')
+    reviewed_by = models.ForeignKey(get_user_model(), on_delete=models.SET_NULL, blank=True, null=True,
+                                    related_name='script_reviewed')
+    modified_by = models.ForeignKey(get_user_model(), on_delete=models.SET_NULL, blank=True, null=True,
+                                    related_name='script_modified')
     description = models.TextField(default='')
 
     class Meta:
@@ -286,15 +290,15 @@ class TestEnv(TimeStampedModel):
     configuration_details = models.TextField()
 
 
-class TestCycle(TimeStampedModel):
-
-    name = models.CharField(max_length=200)
-    description = models.TextField()
-    project = models.ForeignKey(ProjectInfo, on_delete=models.CASCADE)
-    start_date = models.DateTimeField()
-    end_date = models.DateTimeField()
-    owner = models.ForeignKey(Organization, on_delete=models.CASCADE)
-    status = models.BooleanField()
+# class TestCycle(TimeStampedModel):
+#
+#     name = models.CharField(max_length=200)
+#     description = models.TextField()
+#     project = models.ForeignKey(ProjectInfo, on_delete=models.CASCADE)
+#     start_date = models.DateTimeField()
+#     end_date = models.DateTimeField()
+#     owner = models.ForeignKey(Organization, on_delete=models.CASCADE)
+#     status = models.BooleanField()
 
 
 class TestSuit(TimeStampedModel):
@@ -304,12 +308,14 @@ class TestSuit(TimeStampedModel):
     testplan = models.ForeignKey(TestPlan, on_delete=models.CASCADE)
 
 
-class TestRelease(TimeStampedModel):
+# class TestRelease(TimeStampedModel):
+#
+#     name = models.CharField(max_length=200)
+#     description = models.TextField()
+#     project = models.ForeignKey(ProjectInfo, on_delete=models.CASCADE)
+#     start_date = models.DateTimeField()
+#     end_date = models.DateTimeField()
+#     owner = models.ForeignKey(Organization, on_delete=models.CASCADE)
+#     status = models.BooleanField()
 
-    name = models.CharField(max_length=200)
-    description = models.TextField()
-    project = models.ForeignKey(ProjectInfo, on_delete=models.CASCADE)
-    start_date = models.DateTimeField()
-    end_date = models.DateTimeField()
-    owner = models.ForeignKey(Organization, on_delete=models.CASCADE)
-    status = models.BooleanField()
+

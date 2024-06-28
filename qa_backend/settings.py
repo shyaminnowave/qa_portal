@@ -21,7 +21,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/4.0/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = os.environ.get('SECRET_KEY')
+SECRET_KEY = 'django-insecure-_m0rc09s$wa@4^6snye)o2=l(e-gf00g1zwry5aq_pl4b7ic3t'
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
@@ -49,12 +49,17 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    # Third Party Apps
+    'drf_spectacular',
+    'debug_toolbar',
     'corsheaders',
     'django_extensions',
+    'simple_history',
     'rest_framework',
     'rest_framework_simplejwt',
     'rest_framework_simplejwt.token_blacklist',
     'drf_yasg',
+    # Local Apps
     'apps.account',
     'apps.stbs',
     'apps.testcase_app',
@@ -70,6 +75,8 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'debug_toolbar.middleware.DebugToolbarMiddleware',
+    'simple_history.middleware.HistoryRequestMiddleware',
 ]
 
 STATICFILES_DIRS = [
@@ -84,7 +91,8 @@ TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
         'DIRS': [
-            BASE_DIR / 'frontend/build'
+            BASE_DIR / 'frontend/build',
+            BASE_DIR / 'templates'
         ],
         'APP_DIRS': True,
         'OPTIONS': {
@@ -101,13 +109,21 @@ TEMPLATES = [
 WSGI_APPLICATION = 'qa_backend.wsgi.application'
 
 
+INTERNAL_IPS = [
+    "127.0.0.1",
+]
+
 # Database
 # https://docs.djangoproject.com/en/4.0/ref/settings/#databases
 
 DATABASES = {
     'default': {
-        "ENGINE": 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'sqlite3.db'
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': 'qa_database',
+        'HOST': 'localhost',
+        'USER': 'postgres',
+        'PASSWORD': 'shyam6132',
+        'PORTS': '5432'
     }
 }
 
@@ -152,6 +168,16 @@ SIMPLE_JWT = {
     "AUTH_TOKEN_CLASSES": ("rest_framework_simplejwt.tokens.AccessToken",),
     "TOKEN_TYPE_CLAIM": "token_type",
     "TOKEN_USER_CLASS": "rest_framework_simplejwt.models.TokenUser",
+}
+
+SPECTACULAR_SETTINGS = {
+    'TITLE': 'QA Portal API',
+    'DESCRIPTION': 'This is a Website to Show the TestCase Data to Innowave Users',
+    'VERSION': '1.0.0',
+    'SERVE_INCLUDE_SCHEMA': False,
+    'SWAGGER_UI_DIST': 'https://cdn.jsdelivr.net/npm/swagger-ui-dist@latest',
+    'SWAGGER_UI_FAVICON_HREF': 'https://cdn.jsdelivr.net/npm/swagger-ui-dist@latest/favicon-32x32.png',
+    'REDOC_DIST': 'https://cdn.jsdelivr.net/npm/redoc@latest'
 }
 
 # Internationalization

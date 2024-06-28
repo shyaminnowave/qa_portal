@@ -14,7 +14,8 @@ routers.register(r'nacto-language', NatcoLanguageViewSet)
 urlpatterns = [
     path('natco-option/', views.NatcoOptionView.as_view()),
     path('language-option/', views.LanguageOptionView.as_view()),
-    path('device-option/', views.DeviceOptionView.as_view())
+    path('device-option/', views.DeviceOptionView.as_view()),
+    path('test-view/', views.ReportFilterView.as_view())
 ]
 
 urlpatterns += routers.urls

@@ -1,11 +1,10 @@
 import enum
-
 from rest_framework.views import Response
 from rest_framework import generics
 from apps.testcase_app.models import TestCaseModel, TestCaseStep, NatcoStatus, TestResult, TestCaseChoices
 from apps.testcase_app.apis.serializers import TestCaseSerializerList, TestCaseSerializer, ExcelSerializer, \
-        NatcoStatusSerializer, DistinctTestResultSerializer, TestResultSerializer, \
-        TestResultDRPSerializer, BulkFieldUpdateSerializer
+        NatcoStatusSerializer, DistinctTestResultSerializer, TestResultSerializer, NavbarFilterSerializer, \
+        TestResultDRPSerializer, BulkFieldUpdateSerializer, NatcoGraphAPISerializer
 from apps.stbs.models import NactoManufactureLanguage
 from rest_framework.response import Response
 from django.shortcuts import get_object_or_404
@@ -28,7 +27,8 @@ from django.db.models import OuterRef, Subquery
 from django.views.generic import TemplateView
 from rest_framework.views import APIView
 from rest_framework import status
-from django.db.models import Min
+from django.db.models import Min, F, Count, Subquery, OuterRef, Avg, Q
+from apps.stbs.models import Natco
 import json
 
 
@@ -92,7 +92,6 @@ class TestCaseListView(generics.ListAPIView):
     filter_backends = [filters.DjangoFilterBackend]
     filterset_fields = ('jira_id', 'test_name', 'status', 'priority', 'automation_status')
 
-
     def get(self, request, *args, **kwargs):
         queryset = self.filter_queryset(self.get_queryset())
         return super().list(request, *args, **kwargs)
@@ -115,7 +114,8 @@ class TestCaseDetailView(cgenerics.CustomRetrieveUpdateDestroyAPIView):
     
     def get_object(self):
         queryset = get_object_or_404(TestCaseModel.objects.prefetch_related('test_steps'), jira_id=self.kwargs.get('jira_id'))
-        # natco = queryset.annotate(natco_status=Subquery(NatcoStatus.objects.select_related('test_case', 'language', 'device', 'natco', 'user').filter(test_case_id=self.kwargs.get('jira_id'))))
+        # natco = queryset.annotate(natco_status=Subquery(NatcoStatus.objects.select_related('test_case', 'language',
+        # 'device', 'natco', 'user').filter(test_case_id=self.kwargs.get('jira_id'))))
         return queryset
 
     def get(self, request, *args, **kwargs):
@@ -124,6 +124,7 @@ class TestCaseDetailView(cgenerics.CustomRetrieveUpdateDestroyAPIView):
         serializer = NatcoStatusSerializer(queryset, many=True)
         response.data['natco_status'] = serializer.data
         return response
+
 
 class TestCaseNatcoView(generics.ListAPIView):
 
@@ -218,6 +219,78 @@ class TestResultFilterView(generics.GenericAPIView):
         return Response(self.response_format, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
+class NavBarFilter(generics.GenericAPIView):
+
+    serializer_class = NavbarFilterSerializer
+
+    def __init__(self, **kwargs):
+        self.response_format = ResponseInfo().response
+        super().__init__(**kwargs)
+
+    def get_queryset(self):
+        queryset = Natco.objects.all()
+        return queryset
+
+    def get(self, request, *args, **kwargs):
+        serializer = self.get_serializer(self.get_queryset(), many=True)
+        if serializer.data:
+            self.response_format['success'] = True
+            self.response_format['status_code'] = status.HTTP_200_OK
+            self.response_format['data'] = serializer.data
+            self.response_format['message'] = 'Success'
+            return Response(self.response_format, status=status.HTTP_200_OK)
+        if not serializer.data:
+            self.response_format['success'] = False
+            self.response_format['status_code'] = status.HTTP_400_BAD_REQUEST
+            self.response_format['message'] = 'Error'
+            return Response(self.response_format, status=status.HTTP_200_OK)
+        return Response(self.response_format, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+class TestCaseDetailReport(generics.GenericAPIView):
+
+    def __init__(self, **kwargs):
+        self.response_format = ResponseInfo().response
+        super().__init__(**kwargs)
+
+    serializer_class = NatcoGraphAPISerializer
+
+    def get_queryset(self):
+        queryset = TestResult.objects.filter(testcase=self.request.GET.get('testcase')).values('natco')
+        natco = self.request.GET.get('natco')
+        match self.kwargs.get('type'):
+            case 'load_time':
+                if natco is not None:
+                    queryset = queryset.filter(natco__contains=self.request.GET.get('natco'))
+                queryset = queryset.annotate(avg_load_time=Avg('load_time'))
+            case 'cpu_load':
+                if natco is not None:
+                    queryset = queryset.filter(natco__contains=self.request.GET.get('natco'))
+                queryset = queryset.annotate(avg_load_time=Avg('load_time'))
+            case 'ram_load':
+                if natco is not None:
+                    queryset = queryset.filter(natco__contains=self.request.GET.get('natco'))
+                queryset = queryset.annotate(avg_load_time=Avg('load_time'))
+            case _:
+                raise ValueError
+        return queryset
+
+    def get(self, request, *args, **kwargs):
+        serializer = self.get_serializer(self.get_queryset(), many=True)
+        if serializer.data:
+            self.response_format['success'] = True
+            self.response_format['status_code'] = status.HTTP_200_OK
+            self.response_format['data'] = serializer.data
+            self.response_format['message'] = 'Success'
+            return Response(self.response_format, status=status.HTTP_200_OK)
+        if not serializer.data:
+            self.response_format['success'] = False
+            self.response_format['status_code'] = status.HTTP_400_BAD_REQUEST
+            self.response_format['message'] = 'Error'
+            return Response(self.response_format, status=status.HTTP_200_OK)
+        return Response(self.response_format, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
 class TestCaseReportView(generics.GenericAPIView):
 
     def __init__(self, **kwargs):
@@ -225,14 +298,16 @@ class TestCaseReportView(generics.GenericAPIView):
         super().__init__(**kwargs)
 
     serializer_class = DistinctTestResultSerializer
-    
-    def get_queryset(self):
-        results = TestResult.objects.values('testcase', 'natco').annotate(min_cpu=Min('cpu_usage'), min_ram=Min('ram_usage'), min_time=Min('load_time'))
 
+    def get_queryset(self):
+        results = TestResult.objects.values('testcase', 'natco').annotate(min_cpu=Min('cpu_usage'),
+                                             min_ram=Min('ram_usage'), min_time=Min('load_time'))
         # Now, let's filter the results to get the distinct testcase and distinct natco with the minimum values
         distinct_results = []
         for result in results:
-            distinct_result = TestResult.objects.filter(testcase=result['testcase'], natco=result['natco'], cpu_usage=result['min_cpu'], ram_usage=result['min_ram'], load_time=result['min_time']).first()
+            distinct_result = TestResult.objects.filter(testcase=result['testcase'], natco=result['natco'],
+                                                        cpu_usage=result['min_cpu'], ram_usage=result['min_ram'],
+                                                        load_time=result['min_time']).first()
             if distinct_result:
                 distinct_results.append(distinct_result)
         return distinct_results
@@ -271,28 +346,28 @@ class GetTestResult(generics.GenericAPIView):
                 _data = {
                     'run_type': row[0], 
                     'date': row[1], 
-                    'iteration_number' : row[2], 
-                    'testcase' : row[3], 
-                    'load_time' : row[4], 
-                    'cpu' : row[5], 
-                    'ram' : row[6], 
-                    'start_time' : row[7], 
-                    'end_time' : row[8], 
-                    'job_uid' : row[9], 
-                    'node_id' : row[10], 
-                    'failure_reason' : row[11], 
-                    'result' : row[12], 
-                    'natco' : row[13], 
-                    'load_time' : row[14], 
-                    'cpu_usage' : row[15], 
-                    'ram_usage' : row[16], 
-                    'country_code' : row[17], 
-                    'stb_release' : row[18], 
-                    'stb_firmware' : row[19], 
-                    'stb_android' : row[20], 
-                    'stb_build' : row[21], 
-                    'natco_node' : row[22], 
-                    'comment' : row[23], 
+                    'iteration_number': row[2],
+                    'testcase': row[3],
+                    'load_time': row[4],
+                    'cpu': row[5],
+                    'ram': row[6],
+                    'start_time': row[7],
+                    'end_time': row[8],
+                    'job_uid': row[9],
+                    'node_id': row[10],
+                    'failure_reason': row[11],
+                    'result': row[12],
+                    'natco': row[13],
+                    'load_time': row[14],
+                    'cpu_usage': row[15],
+                    'ram_usage': row[16],
+                    'country_code': row[17],
+                    'stb_release': row[18],
+                    'stb_firmware': row[19],
+                    'stb_android': row[20],
+                    'stb_build': row[21],
+                    'natco_node': row[22],
+                    'comment': row[23],
                 }
                 _test_result.append(TestResult(**_data))
             with transaction.atomic():
@@ -381,3 +456,9 @@ class GetTestCase(generics.GenericAPIView):
         self.response_format['data'] = "Success"
         self.response_format['message'] = "TestCase Uploaded Successfully"
         return Response(self.response_format, status=status.HTTP_201_CREATED)
+
+
+class TestView(generics.GenericAPIView):
+
+    def get(self, request, *args, **kwargs):
+        pass
