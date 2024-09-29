@@ -30,7 +30,7 @@ urlpatterns = [
     path('api/', include('apps.testcases.apis.urls', namespace='testcases')),
     path('api/', include('apps.stb_tester.urls', namespace='stb-tester')),
     path("__debug__/", include("debug_toolbar.urls")),
-    # re_path(r'^.*$', TemplateView.as_view(template_name='index.html'))
+    re_path(r'^.*$', TemplateView.as_view(template_name='index.html'))
 ]
 
 # urlpatterns += static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
