@@ -321,8 +321,8 @@ class ScriptIssue(TimeStampedModel):
         return self.summary
 
     @classmethod
-    def check_open_issues(cls):
-        _issues = cls.objects.filter(status=cls.Status.OPEN).only('status')
+    def check_open_issues(cls, instance):
+        _issues = cls.objects.filter(testcase=instance, status=cls.Status.OPEN).only('testcase', 'status')
         return True if _issues else False
 
     def save(self, *args, **kwargs):

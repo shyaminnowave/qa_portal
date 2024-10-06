@@ -30,10 +30,12 @@ def change_testcase_status(sender, instance, created, **kwargs):
         if _instance:
             if instance.status == 'open':
                 _instance.automation_status = AutomationChoices.IN_DEVELOPMENT
+            elif instance.status == 'under_review':
+                _instance.automation_status = AutomationChoices.REVIEW
             elif instance.status == 'closed':
-                _testcase = ScriptIssue.check_open_issues()
+                _testcase = ScriptIssue.check_open_issues(instance=instance.testcase)
                 if _testcase is False:
-                    _instance.automation_status = AutomationChoices.REVIEW
+                    _instance.automation_status = AutomationChoices.READY
             _instance.save()
         else:
             print('not found')
