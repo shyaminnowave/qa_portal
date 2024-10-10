@@ -177,7 +177,7 @@ class TestCaseSerializer(serializers.ModelSerializer):
         ] if _data else []
 
     def update(self, instance, validated_data):
-        history_change_reason = validated_data.get('history_change_reason', None)
+        history_change_reason = validated_data.get('history_change_reason', "Script Issues Raised")
         instance = super().update(instance, validated_data)
         if history_change_reason:
             update_change_reason(instance, history_change_reason)
