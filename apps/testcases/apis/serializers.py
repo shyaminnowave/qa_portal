@@ -358,24 +358,38 @@ class HistorySerializer(serializers.Serializer):
     test_name = serializers.CharField()
 
     def get_changed_to(self, obj):
-        # Assuming obj is an instance of historical record
-        # Compare obj with the current instance of TestCaseModel
-        current_instance = TestCaseModel.objects.get(id=obj.id)
-        differences = {}
-        # Here, you should define how to determine the differences
-        if obj.status != current_instance.status:
-            differences['status'] = {
-                'old_value': obj.status,
-                'new_value': current_instance.status,
-            }
+        # Retrieve the TestCaseModel instance
+        _instance = TestCaseModel.objects.get(id=obj.id)
 
-            # Compare the automation_status field
-        if obj.automation_status != current_instance.automation_status:
-            differences['automation_status'] = {
-                'old_value': obj.automation_status,
-                'new_value': current_instance.automation_status,
-            }
-        return differences
+        # Get all historical records ordered by history_date
+        history_records = list(_instance.history.filter(history_type='~').order_by('history_date'))
+
+        # Find the index of the current history record
+        try:
+            current_index = history_records.index(obj)
+        except ValueError:
+            # If the current object is not found in history_records, return an empty list
+            return []
+
+        if current_index == 0:
+            # No previous record to compare with, so no changes
+            return []
+
+        # Get the previous history record
+        old_record = history_records[current_index - 1]
+        new_record = obj
+
+        # Calculate the differences between the two records
+        delta = new_record.diff_against(old_record)
+        differences = {}
+
+        for change in delta.changes:
+            differences[change.field] = f"changed from '{change.old}' to '{change.new}'"
+
+        # Convert the differences dictionary to a list of dictionaries
+        differences_list = [{field: desc} for field, desc in differences.items()]
+
+        return differences_list
 
     def get_created(self, obj):
         data = datetime.fromisoformat(str(obj))

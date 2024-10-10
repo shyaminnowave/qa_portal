@@ -786,7 +786,7 @@ class HistoryView(generics.GenericAPIView):
 
     def get_queryset(self):
         queryset = TestCaseModel.objects.get(id=self.kwargs.get("id"))
-        return queryset.history.all()
+        return queryset.history.filter(history_type='~')
 
     def get(self, request, *args, **kwargs):
         print(self.get_queryset())
