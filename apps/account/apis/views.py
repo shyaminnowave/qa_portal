@@ -176,7 +176,7 @@ class LoginView(generics.GenericAPIView):
                 self.response_format['status'] = False
                 self.response_format['status_code'] = status.HTTP_400_BAD_REQUEST
                 self.response_format['data'] = user_cred
-                self.response_format['message'] = "User Login Failed Please Try Again"
+                self.response_format['message'] = "Email/Password Incorrect Please Try Again"
                 return Response(self.response_format,
                                 status=status.HTTP_404_NOT_FOUND)
         except Exception as e:

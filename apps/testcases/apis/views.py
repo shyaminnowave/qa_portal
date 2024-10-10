@@ -12,7 +12,9 @@ from apps.testcases.models import (
     AutomationChoices,
     StatusChoices,
     PriorityChoice,
-    TestReport, Comment, ScriptIssue
+    TestReport,
+    Comment,
+    ScriptIssue,
 )
 from apps.testcases.apis.serializers import (
     TestCaseSerializerList,
@@ -28,7 +30,7 @@ from apps.testcases.apis.serializers import (
     TestStepSerializer,
     HistorySerializer,
     ScriptIssueSerializer,
-    CommentSerializer
+    CommentSerializer,
 )
 from rest_framework.response import Response
 from django.shortcuts import get_object_or_404
@@ -47,6 +49,7 @@ from rest_framework import status
 from django.db.models import Min, F, Count, Subquery, OuterRef, Avg, Q
 from apps.stbs.models import Natco
 from apps.testcases.utlity import ReportExcel
+
 # from apps.stb_tester.views import BaseAPI
 
 
@@ -86,7 +89,7 @@ class ResponseTemplateApi:
         "- `200 OK`: Successfully updated the specified fields.\n"
         "- `400 Bad Request`: Returned if the provided data is invalid or if the update operation fails."
     ),
-    tags=["TestCase Module APIS"]
+    tags=["TestCase Module APIS"],
 )
 class BulkFieldUpdateView(generics.GenericAPIView):
 
@@ -132,10 +135,8 @@ class BulkFieldUpdateView(generics.GenericAPIView):
 
 @extend_schema(
     summary="Retrieve a list of test cases",
-    description=(
-        "This endpoint retrieves a paginated list of test cases.\n\n"
-    ),
-    tags=["TestCase Module APIS"]
+    description=("This endpoint retrieves a paginated list of test cases.\n\n"),
+    tags=["TestCase Module APIS"],
 )
 class TestCaseListView(generics.ListAPIView):
 
@@ -168,14 +169,12 @@ class TestCaseListView(generics.ListAPIView):
 
 @extend_schema(
     summary="Create a new test case",
-    description=(
-        "This endpoint allows you to create a new test case.\n\n"
-    ),
-    tags=["TestCase Module APIS"]
+    description=("This endpoint allows you to create a new test case.\n\n"),
+    tags=["TestCase Module APIS"],
 )
 class TestCaseView(cgenerics.CustomCreateAPIView):
 
-    authentication_classes = (JWTAuthentication, )
+    authentication_classes = (JWTAuthentication,)
     serializer_class = TestCaseSerializer
 
     def post(self, request, *args, **kwargs):
@@ -187,11 +186,13 @@ class TestCaseView(cgenerics.CustomCreateAPIView):
     description=(
         "This endpoint allows you to retrieve, update, or delete a test case by its ID.\n\n"
     ),
-    tags=["TestCase Module APIS"]
+    tags=["TestCase Module APIS"],
 )
 class TestCaseDetailView(cgenerics.CustomRetrieveUpdateDestroyAPIView):
 
-    authentication_classes = [JWTAuthentication,]
+    authentication_classes = [
+        JWTAuthentication,
+    ]
     lookup_field = "id"
     serializer_class = TestCaseSerializer
 
@@ -212,10 +213,10 @@ class TestCaseDetailView(cgenerics.CustomRetrieveUpdateDestroyAPIView):
         # serializer = NatcoStatusSerializer(queryset, many=True)
         # response.data["natco_status"] = serializer.data
         return response
-    
+
     def put(self, request, *args, **kwargs):
         return super(TestCaseDetailView, self).put(request, *args, **kwargs)
-    
+
     def patch(self, request, *args, **kwargs):
         return super(TestCaseDetailView, self).patch(request, *args, **kwargs)
 
@@ -225,7 +226,7 @@ class TestCaseDetailView(cgenerics.CustomRetrieveUpdateDestroyAPIView):
     description=(
         "This endpoint allows you to create a new test case step or update an existing one.\n\n"
     ),
-    tags=["TestCase Module APIS"]
+    tags=["TestCase Module APIS"],
 )
 class TestCaseStepView(cgenerics.CustomCreateAPIView, cgenerics.CustomUpdateAPIView):
 
@@ -236,31 +237,33 @@ class TestCaseStepView(cgenerics.CustomCreateAPIView, cgenerics.CustomUpdateAPIV
 
         if serializer.is_valid(raise_exception=True):
             serializer.create(serializer.validated_data)
-            self.response_format['status'] = status.HTTP_201_CREATED
-            self.response_format['data'] = serializer.data
-            self.response_format['message'] = 'Success'
+            self.response_format["status"] = status.HTTP_201_CREATED
+            self.response_format["data"] = serializer.data
+            self.response_format["message"] = "Success"
             return Response(self.response_format, status=status.HTTP_201_CREATED)
-        self.response_format['status'] = status.HTTP_400_BAD_REQUEST
-        self.response_format['data'] = 'Error'
-        self.response_format['message'] = 'Error'
+        self.response_format["status"] = status.HTTP_400_BAD_REQUEST
+        self.response_format["data"] = "Error"
+        self.response_format["message"] = "Error"
         return Response(self.response_format, status=status.HTTP_201_CREATED)
 
     def put(self, request, *args, **kwargs):
-        testcase_instance = TestCaseStep.objects.get(id=request.data['id'])
+        testcase_instance = TestCaseStep.objects.get(id=request.data["id"])
         serializer = self.get_serializer(instance=testcase_instance, data=request.data)
         if serializer.is_valid(raise_exception=True):
-            serializer.update(instance=testcase_instance, validated_data=serializer.validated_data)
-            self.response_format['status'] = status.HTTP_201_CREATED
-            self.response_format['data'] = serializer.data
-            self.response_format['message'] = 'Success'
+            serializer.update(
+                instance=testcase_instance, validated_data=serializer.validated_data
+            )
+            self.response_format["status"] = status.HTTP_201_CREATED
+            self.response_format["data"] = serializer.data
+            self.response_format["message"] = "Success"
             return Response(self.response_format, status=status.HTTP_201_CREATED)
-        self.response_format['status'] = status.HTTP_400_BAD_REQUEST
-        self.response_format['data'] = 'Error'
-        self.response_format['message'] = 'Error'
+        self.response_format["status"] = status.HTTP_400_BAD_REQUEST
+        self.response_format["data"] = "Error"
+        self.response_format["message"] = "Error"
         return Response(self.response_format, status=status.HTTP_201_CREATED)
 
     def delete(self, request):
-        teststep_instance = TestCaseStep.objects.get(id=request.data.get('id'))
+        teststep_instance = TestCaseStep.objects.get(id=request.data.get("id"))
         serializer = self.get_serializer(instance=teststep_instance)
         serializer.delete()
         return Response({"success": True})
@@ -271,15 +274,15 @@ class TestCaseStepView(cgenerics.CustomCreateAPIView, cgenerics.CustomUpdateAPIV
     description=(
         "This endpoint allows you to delete a specific test step by its ID.\n\n"
     ),
-    tags=["TestCase Module APIS"]
+    tags=["TestCase Module APIS"],
 )
 class TestStepDeleteView(cgenerics.CustomDestroyAPIView):
 
     serializer_class = TestStepSerializer
 
     def delete(self, request, *args, **kwargs):
-        print(kwargs.get('id'))
-        teststep_instance = TestCaseStep.objects.get(id=kwargs.get('id'))
+        print(kwargs.get("id"))
+        teststep_instance = TestCaseStep.objects.get(id=kwargs.get("id"))
         serializer = self.get_serializer(instance=teststep_instance)
         serializer.delete(teststep_instance)
         return Response("success")
@@ -312,7 +315,7 @@ class TestCaseNatcoView(generics.ListAPIView):
         "- `200 OK`: A list of NATCO statuses, including the `id` and `summary` fields.\n"
         "- `404 Not Found`: Returned if no NATCO statuses are found for the specified test case."
     ),
-    tags=["TestCase Module APIS"]
+    tags=["TestCase Module APIS"],
 )
 class TestCaseNatcoList(generics.ListAPIView):
     # permission_classes = [AdminPermission]
@@ -399,7 +402,7 @@ class TestCaseNatcoList(generics.ListAPIView):
         "- `400 Bad Request`: Returned when the update request is invalid.\n"
         "- `404 Not Found`: Returned if the specified NATCO status does not exist."
     ),
-    tags=["TestCase Module APIS"]
+    tags=["TestCase Module APIS"],
 )
 class TestCaseNatcoDetail(cgenerics.CustomRetrieveUpdateDestroyAPIView):
     # permission_classes = [AdminPermission]
@@ -424,20 +427,29 @@ class TestCaseNatcoDetail(cgenerics.CustomRetrieveUpdateDestroyAPIView):
         "- **Automation**: A list of automation-related options.\n\n"
         "Each filter option is represented as an object with `label` and `value` fields."
     ),
-    tags=["TestCase Module APIS"]
+    tags=["TestCase Module APIS"],
 )
 class FiltersView(APIView):
 
     def get(self, request, *args, **kwargs):
-        testcase_status = [{"label": choice.label, "value": choice.value} for choice in TestCaseChoices]
-        status = [{"label": choice.label, "value": choice.value} for choice in StatusChoices]
-        priority = [{"label": choice.label, "value": choice.value} for choice in PriorityChoice]
-        automation = [{"label": choice.label, "value": choice.value} for choice in AutomationChoices]
+        testcase_status = [
+            {"label": choice.label, "value": choice.value} for choice in TestCaseChoices
+        ]
+        status = [
+            {"label": choice.label, "value": choice.value} for choice in StatusChoices
+        ]
+        priority = [
+            {"label": choice.label, "value": choice.value} for choice in PriorityChoice
+        ]
+        automation = [
+            {"label": choice.label, "value": choice.value}
+            for choice in AutomationChoices
+        ]
         _data = {
             "testcase_filter": testcase_status,
             "status": status,
             "priority": priority,
-            "automation": automation
+            "automation": automation,
         }
         return Response(_data)
 
@@ -611,11 +623,11 @@ class ReportView(generics.GenericAPIView):
     serializer_class = GraphReportSerializer
 
     def get_queryset(self):
-        queryset = TestReport.objects.values('testcase__test_name', 'node').annotate(
-                                                                              cpu=Min("cpu_usage_percentile"),
-                                                                              loadtime=Min("loadtime_percentile"),
-                                                                              ram=Min("ram_usage_percentile")
-                                                                            )
+        queryset = TestReport.objects.values("testcase__test_name", "node").annotate(
+            cpu=Min("cpu_usage_percentile"),
+            loadtime=Min("loadtime_percentile"),
+            ram=Min("ram_usage_percentile"),
+        )
         return queryset
 
     def get(self, request, *args, **kwargs):
@@ -623,31 +635,33 @@ class ReportView(generics.GenericAPIView):
         _data = defaultdict(lambda: defaultdict(list))
         for item in serializer.data:
             cpu_data = {
-                'natco': item['natco'],
-                'buildname': item['natco_version'],
-                'value': item['cpu']
+                "natco": item["natco"],
+                "buildname": item["natco_version"],
+                "value": item["cpu"],
             }
             ram_data = {
-                'natco': item['natco'],
-                'buildname': item['natco_version'],
-                'value': item['ram']
+                "natco": item["natco"],
+                "buildname": item["natco_version"],
+                "value": item["ram"],
             }
             load_data = {
-                'natco': item['natco'],
-                'buildname': item['natco_version'],
-                'value': item['loadtime']
+                "natco": item["natco"],
+                "buildname": item["natco_version"],
+                "value": item["loadtime"],
             }
-            _data[item['testcase']]['cpu'].append(cpu_data)
-            _data[item['testcase']]['ram'].append(ram_data)
-            _data[item['testcase']]['loadtime'].append(load_data)
+            _data[item["testcase"]]["cpu"].append(cpu_data)
+            _data[item["testcase"]]["ram"].append(ram_data)
+            _data[item["testcase"]]["loadtime"].append(load_data)
         final_output = []
         for testcase_name, metrics in _data.items():
-            final_output.append({
-                'testcaseName': testcase_name,
-                'cpu': metrics['cpu'],
-                'RAM': metrics['ram'],
-                'Load': metrics['loadtime']
-            })
+            final_output.append(
+                {
+                    "testcaseName": testcase_name,
+                    "cpu": metrics["cpu"],
+                    "RAM": metrics["ram"],
+                    "Load": metrics["loadtime"],
+                }
+            )
         if final_output:
             self.response_format["success"] = True
             self.response_format["status_code"] = status.HTTP_200_OK
@@ -667,11 +681,11 @@ class ReportView(generics.GenericAPIView):
 class TestReportGraphView(generics.GenericAPIView):
 
     def get_queryset(self):
-        queryset = TestReport.objects.values('testcase__test_name', 'node').annotate(
-                                                                              cpu=Min("cpu_usage_percentile"),
-                                                                              loadtime=Min("loadtime_percentile"),
-                                                                              ram=Min("ram_usage_percentile")
-                                                                            )
+        queryset = TestReport.objects.values("testcase__test_name", "node").annotate(
+            cpu=Min("cpu_usage_percentile"),
+            loadtime=Min("loadtime_percentile"),
+            ram=Min("ram_usage_percentile"),
+        )
         return queryset
 
 
@@ -743,7 +757,7 @@ class DemoView(generics.GenericAPIView):
     serializer_class = TestCaseSerializer
 
     def get_queryset(self):
-        queryset = TestCaseModel.objects.prefetch_related('test_steps').get(id=13005)
+        queryset = TestCaseModel.objects.prefetch_related("test_steps").get(id=13005)
         print(len(queryset.test_steps.all()))
         return queryset
 
@@ -760,7 +774,7 @@ class DemoView(generics.GenericAPIView):
         "with each entry showing the changes made to the test case.\n"
         "Only entries with a non-null `changed_to` field are included in the response."
     ),
-    tags=["TestCase Module APIS"]
+    tags=["TestCase Module APIS"],
 )
 class HistoryView(generics.GenericAPIView):
 
@@ -771,18 +785,17 @@ class HistoryView(generics.GenericAPIView):
     serializer_class = HistorySerializer
 
     def get_queryset(self):
-        queryset = TestCaseModel.objects.get(id=self.kwargs.get('id'))
+        queryset = TestCaseModel.objects.get(id=self.kwargs.get("id"))
         return queryset.history.all()
 
     def get(self, request, *args, **kwargs):
+        print(self.get_queryset())
         serializer = self.get_serializer(self.get_queryset(), many=True)
-        filtered_data = [entry for entry in serializer.data if entry['changed_to']]
         self.response_format["status"] = True
         self.response_format["status_code"] = status.HTTP_200_OK
-        self.response_format["data"] = filtered_data
+        self.response_format["data"] = serializer.data
         self.response_format["message"] = "Success"
         return Response(self.response_format, status=status.HTTP_200_OK)
-
 
 
 @extend_schema(
@@ -792,7 +805,7 @@ class HistoryView(generics.GenericAPIView):
         "specific test case identified by its ID.\n\n"
         "You can also create a new script issue by providing the required details in the request body."
     ),
-    tags=["TestCase Module APIS"]
+    tags=["TestCase Module APIS"],
 )
 class ScriptIssueView(generics.ListCreateAPIView):
 
@@ -803,7 +816,9 @@ class ScriptIssueView(generics.ListCreateAPIView):
     serializer_class = ScriptIssueSerializer
 
     def get_queryset(self):
-        queryset = TestCaseModel.objects.prefetch_related('issues').get(id=self.kwargs.get("id"))
+        queryset = TestCaseModel.objects.prefetch_related("issues").get(
+            id=self.kwargs.get("id")
+        )
         return queryset.issues.all()
 
     def get(self, request, *args, **kwargs):
@@ -823,7 +838,9 @@ class ScriptIssueView(generics.ListCreateAPIView):
         serializer = self.get_serializer(data=request.data)
         try:
             if serializer.is_valid():
-                serializer.create(serializer.validated_data, id=self.kwargs.get('id', None))
+                serializer.create(
+                    serializer.validated_data, id=self.kwargs.get("id", None)
+                )
                 self.response_format["status"] = True
                 self.response_format["status_code"] = status.HTTP_200_OK
                 self.response_format["data"] = serializer.data
@@ -849,7 +866,7 @@ class ScriptIssueView(generics.ListCreateAPIView):
         "You can update the script issue by providing the required fields in the request body. "
         "To delete a script issue, simply send a DELETE request to this endpoint."
     ),
-    tags=["TestCase Module APIS"]
+    tags=["TestCase Module APIS"],
 )
 class ScriptIssueDetailView(generics.GenericAPIView):
 
@@ -877,7 +894,9 @@ class ScriptIssueDetailView(generics.GenericAPIView):
         return Response(self.response_format)
 
     def put(self, request, *args, **kwargs):
-        serializer = self.get_serializer(instance=self.get_queryset(), data=request.data)
+        serializer = self.get_serializer(
+            instance=self.get_queryset(), data=request.data
+        )
         if serializer.is_valid():
             serializer.save()
             self.response_format["status"] = True
@@ -898,7 +917,7 @@ class ScriptIssueDetailView(generics.GenericAPIView):
         " for a Script Issue\n\n"
         "To create a new comment, provide the required fields in the request body, such as 'text' and 'author'."
     ),
-    tags=["TestCase Module APIS"]
+    tags=["TestCase Module APIS"],
 )
 class CommentsView(generics.ListCreateAPIView):
 
@@ -909,7 +928,7 @@ class CommentsView(generics.ListCreateAPIView):
     serializer_class = CommentSerializer
 
     def get_queryset(self):
-        queryset = Comment.objects.filter(object_id=self.kwargs['id'])
+        queryset = Comment.objects.filter(object_id=self.kwargs["id"])
         return queryset
 
     def get(self, request, *args, **kwargs):
@@ -937,13 +956,13 @@ class CommentsView(generics.ListCreateAPIView):
                 return Response(self.response_format)
             self.response_format["status"] = False
             self.response_format["status_code"] = status.HTTP_400_BAD_REQUEST
-            self.response_format['data'] = serializer.errors
+            self.response_format["data"] = serializer.errors
             self.response_format["message"] = "No Data"
             return Response(self.response_format)
         except Exception as e:
             self.response_format["status"] = False
             self.response_format["status_code"] = status.HTTP_400_BAD_REQUEST
-            self.response_format['data'] = e
+            self.response_format["data"] = e
             self.response_format["message"] = "No Data"
             return Response(self.response_format)
 
@@ -954,7 +973,7 @@ class CommentsView(generics.ListCreateAPIView):
         "This endpoint allows users to retrieve a specific comment by its ID and update the comment's text.\n\n"
         "To update a comment, provide the new text in the request body."
     ),
-    tags=["TestCase Module APIS"]
+    tags=["TestCase Module APIS"],
 )
 class CommentEditView(generics.GenericAPIView):
 
@@ -965,7 +984,7 @@ class CommentEditView(generics.GenericAPIView):
     serializer_class = CommentSerializer
 
     def get_queryset(self):
-        queryset = Comment.objects.get(id=self.kwargs['pk'])
+        queryset = Comment.objects.get(id=self.kwargs["pk"])
         return queryset
 
     def get(self, request, *args, **kwargs):
@@ -982,7 +1001,9 @@ class CommentEditView(generics.GenericAPIView):
         return Response(self.response_format)
 
     def put(self, request, *args, **kwargs):
-        serializer = self.get_serializer(instance=self.get_queryset(), data=request.data)
+        serializer = self.get_serializer(
+            instance=self.get_queryset(), data=request.data
+        )
         if serializer.is_valid():
             serializer.save()
             self.response_format["status"] = True
