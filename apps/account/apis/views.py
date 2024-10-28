@@ -203,8 +203,8 @@ class LoginView(generics.GenericAPIView):
                 'refresh': token['refresh'],
                 'email': user.email,
                 'username': user.username,
-                'domain': api_token.domain_url if api_token.domain_url else None,
-                'jira_username': api_token.username if api_token.username else None,
+                'domain': api_token.domain_url if api_token else None,
+                'jira_username': api_token.username if api_token else None,
                 'token': api_token.token if api_token else None
             }
         return None
