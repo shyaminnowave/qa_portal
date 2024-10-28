@@ -1,6 +1,6 @@
 from typing import Any
 from django.contrib import admin
-from apps.account.models import Account, LoginHistory
+from apps.account.models import Account, LoginHistory, ThirdPartyIntegrationTable
 from django.contrib.auth.admin import UserAdmin
 from django.utils.translation import gettext_lazy as _
 
@@ -34,3 +34,5 @@ class LoginHistoryAdmin(admin.ModelAdmin):
 
 admin.site.register(Account, AccountAdmin)
 admin.site.register(LoginHistory, LoginHistoryAdmin)
+admin.site.register(ThirdPartyIntegrationTable)
+    

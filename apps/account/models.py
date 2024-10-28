@@ -117,4 +117,18 @@ class LoginHistory(models.Model):
         ordering = ['-date_time']
         verbose_name = 'Login History'
         verbose_name_plural = 'Login Histories'
-        
+
+
+class ThirdPartyIntegrationTable(TimeStampedModel):
+
+    domain_url = models.URLField()
+    account = models.ForeignKey(Account, on_delete=models.CASCADE, related_name='third_party_integration_table',
+                                to_field='email')
+    username = models.CharField(_('username'), max_length=30, unique=True)
+    token = models.CharField(_('token'), max_length=330, unique=True)
+    is_active = models.BooleanField(_('active'), default=True)
+
+    class Meta:
+        verbose_name = 'Intergration Table'
+        verbose_name_plural = 'Intergration Table'
+

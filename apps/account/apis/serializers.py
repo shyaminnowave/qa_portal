@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from apps.account.models import Account
+from apps.account.models import Account, ThirdPartyIntegrationTable
 from rest_framework.views import exception_handler
 from django.contrib.auth import get_user_model
 from rest_framework.exceptions import APIException
@@ -186,3 +186,8 @@ class UserSerializer(serializers.ModelSerializer):
         return represent
 
 
+class JiraSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = ThirdPartyIntegrationTable
+        fields = '__all__'

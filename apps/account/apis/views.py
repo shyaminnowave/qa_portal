@@ -1,13 +1,19 @@
 from typing import Any
+from rest_framework.request import Request
 from rest_framework.views import Response
 from rest_framework import generics
-from apps.account.models import Account
+from rest_framework_simplejwt.exceptions import InvalidToken
+
+from apps.account.models import Account, ThirdPartyIntegrationTable
 from apps.account.apis.serializers import AccountSerializer, LoginSerializer, ProfileSerializer, UserListSerializer, \
-                                PermissionSerializer, GroupListSerializer, GroupSerializer, UserSerializer
+                                PermissionSerializer, GroupListSerializer, GroupSerializer, UserSerializer, \
+                                JiraSerializer
 from django.contrib.auth import authenticate
 from rest_framework import status
 from apps.account.utils import get_token_for_user
 from rest_framework_simplejwt.tokens import RefreshToken
+from rest_framework_simplejwt.views import TokenViewBase
+from rest_framework_simplejwt.serializers import TokenRefreshSerializer
 from rest_framework.views import APIView
 from rest_framework_simplejwt.authentication import JWTAuthentication
 from apps.account.signals import user_token_login, user_token_logout
@@ -176,7 +182,7 @@ class LoginView(generics.GenericAPIView):
                 self.response_format['status'] = False
                 self.response_format['status_code'] = status.HTTP_400_BAD_REQUEST
                 self.response_format['data'] = user_cred
-                self.response_format['message'] = "Email/Password Incorrect Please Try Again"
+                self.response_format['message'] = "User Login Failed, Please try again"
                 return Response(self.response_format,
                                 status=status.HTTP_404_NOT_FOUND)
         except Exception as e:
@@ -191,11 +197,15 @@ class LoginView(generics.GenericAPIView):
         if user is not None:
             user_token_login.send(sender=user, user=user, request=request)
             token = get_token_for_user(user)
+            api_token = ThirdPartyIntegrationTable.objects.filter(account=user).first()
             return {
                 'access': token['access'],
                 'refresh': token['refresh'],
                 'email': user.email,
-                'username': user.username
+                'username': user.username,
+                'domain': api_token.domain_url if api_token.domain_url else None,
+                'jira_username': api_token.username if api_token.username else None,
+                'token': api_token.token if api_token else None
             }
         return None
 
@@ -332,3 +342,51 @@ class GroupUsers(cgenerics.CustomRetriveAPIVIew):
 
     serializer_class = ProfileSerializer
 
+
+class AccountTokenRefreshView(TokenViewBase):
+
+    serializer_class = TokenRefreshSerializer
+
+    def __init__(self, **kwargs: Any) -> None:
+        self.response_format = ResponseInfo().response
+        super().__init__(**kwargs)
+
+    def post(self, request, *args, **kwargs):
+        try:
+            response = super().post(request,*args, **kwargs)
+            self.response_format['status'] = True
+            self.response_format['status_code'] = status.HTTP_200_OK
+            self.response_format['data'] = response.data
+            self.response_format['message'] = "Success"
+            return Response(self.response_format, status=status.HTTP_200_OK)
+        except InvalidToken:
+            self.response_format['status'] = False
+            self.response_format['status_code'] = status.HTTP_400_BAD_REQUEST
+            self.response_format['data'] = None
+            self.response_format['message'] = str(InvalidToken.default_detail)
+            return Response(self.response_format, status=status.HTTP_400_BAD_REQUEST)
+
+
+class JiraIntgrationView(generics.GenericAPIView):
+    
+    def __init__(self, **kwargs: Any) -> None:
+        self.response_format = ResponseInfo().response
+        super().__init__(**kwargs)
+
+    serializer_class = JiraSerializer
+
+    def post(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            self.response_format['status'] = True
+            self.response_format['status_code'] = status.HTTP_200_OK
+            self.response_format['data'] = serializer.data
+            self.response_format['message'] = "Success"
+        else:
+            self.response_format['status'] = False
+            self.response_format['status_code'] = status.HTTP_400_BAD_REQUEST
+            self.response_format['data'] = serializer.errors
+            self.response_format['message'] = serializer.errors
+            return Response(self.response_format, status=status.HTTP_400_BAD_REQUEST)
+        return Response(self.response_format, status=status.HTTP_200_OK)

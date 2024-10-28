@@ -9,6 +9,7 @@ from django.db.models import Max
 from django.contrib.contenttypes.fields import GenericForeignKey, GenericRelation
 from django.contrib.contenttypes.models import ContentType
 from autoslug import AutoSlugField
+from apps.testcases.managers import TestCaseManager
 # Create your models here.
 
 User = get_user_model()
@@ -46,25 +47,30 @@ class TestCaseChoices(models.TextChoices):
 # ----------------------------------------------------
 
 
-class TestCaseScript(models.Model):
+class TestCaseScript(TimeStampedModel):
 
     testcase = models.ForeignKey('TestCaseModel', on_delete=models.SET_NULL, blank=True, null=True,
                                  related_name='testcase_script')
     script_name = models.CharField(max_length=200, default='')
     script_location = models.URLField()
     script_type = models.CharField(choices=TestCaseChoices.choices, max_length=20)
+    natco = models.CharField(max_length=200, default='')
     developed_by = models.ForeignKey(get_user_model(), on_delete=models.SET_NULL, blank=True, null=True,
-                                     related_name='script_developed')
+                                     related_name='script_developed', to_field='email')
     reviewed_by = models.ForeignKey(get_user_model(), on_delete=models.SET_NULL, blank=True, null=True,
-                                    related_name='script_reviewed')
+                                    related_name='script_reviewed', to_field='email')
     modified_by = models.ForeignKey(get_user_model(), on_delete=models.SET_NULL, blank=True, null=True,
-                                    related_name='script_modified')
+                                    related_name='script_modified', to_field='email')
     description = models.TextField(default='')
 
     class Meta:
         verbose_name = 'TestCase Script'
         verbose_name_plural = 'TestCase Script'
 
+    def save(self, *args, **kwargs):
+        if self.natco:
+            self.natco = self.natco.upper()
+        super().save(*args, **kwargs)
 
 class TestCaseModel(TimeStampedModel):
 
@@ -74,13 +80,13 @@ class TestCaseModel(TimeStampedModel):
     summary = models.TextField(_("Jira Summary"), default='')
     description = models.TextField(_('TestCase Description'), default='')
     testcase_type = models.CharField(max_length=20, choices=TestCaseChoices.choices,  default=TestCaseChoices.SMOKE)
-    script = models.ForeignKey(TestCaseScript, on_delete=models.CASCADE, blank=True, null=True)
     status = models.CharField(max_length=20, choices=StatusChoices.choices, default=StatusChoices.TODO)
-    automation_status = models.CharField(max_length=20, choices=AutomationChoices.choices,
+    automation_status = models.CharField(max_length=100, choices=AutomationChoices.choices,
                                          default=AutomationChoices.NOT_AUTOMATABLE)
     comments = GenericRelation("Comment", related_name='testcases')
     slug = AutoSlugField(populate_from='test_name', unique=True, always_update=True)
     history = HistoricalRecords()
+    objects = TestCaseManager()
 
     class Meta:
         verbose_name = 'TestCase'
@@ -154,15 +160,15 @@ class NatcoStatus(TimeStampedModel):
         READY = AutomationChoices.READY
         MANUAL = 'manual', _('Manual')
 
-    natco = models.ForeignKey(Natco, on_delete=models.CASCADE, related_name='natco_status')
-    language = models.ForeignKey(Language, on_delete=models.CASCADE)
-    device = models.ForeignKey(STBManufacture, on_delete=models.CASCADE)
+    natco = models.CharField(max_length=100, blank=True, null=True)
+    language = models.CharField(max_length=100, blank=True, null=True)
+    device = models.CharField(max_length=100, blank=True, null=True)
     test_case = models.ForeignKey(TestCaseModel, on_delete=models.CASCADE, related_name='natco_status')
-    status = models.CharField(max_length=20, choices=NatcoStatusChoice.choices, default=NatcoStatusChoice.MANUAL)
-    # user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='user_natco', blank=True, null=True)
-    # reviewed_by = models.ForeignKey(User, on_delete=models.CASCADE, related_name='natco_reviewer', blank=True,
-    #                                 null=True)
-    # modified = models.ForeignKey(User, on_delete=models.CASCADE, related_name='natoc_modified', blank=True, null=True)
+    status = models.CharField(max_length=100, choices=NatcoStatusChoice.choices, default=NatcoStatusChoice.MANUAL)
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='user_natcostatus', blank=True, null=True,
+                             to_field='email')
+    modified = models.ForeignKey(User, on_delete=models.CASCADE, related_name='natcostatus_modified', blank=True,
+                                 null=True, to_field='email')
     applicable = models.BooleanField(default=True)
     history = HistoricalRecords()
 
@@ -175,7 +181,7 @@ class NatcoStatus(TimeStampedModel):
 
     def save(self, **kwargs):
         status = self.status
-        test_case = TestCaseModel.objects.get(jira_id=self.test_case.jira_id)
+        test_case = TestCaseModel.objects.filter(jira_id=self.test_case.jira_id).first()
         if status == 'in_development':
             test_case.automation_status = 'in-development'
         elif status == 'review':
@@ -322,7 +328,7 @@ class ScriptIssue(TimeStampedModel):
 
     @classmethod
     def check_open_issues(cls, instance):
-        _issues = cls.objects.filter(testcase=instance, status=cls.Status.OPEN).only('testcase', 'status')
+        _issues = cls.objects.filter(testcase=instance, status=cls.Status.OPEN).only('status')
         return True if _issues else False
 
     def save(self, *args, **kwargs):

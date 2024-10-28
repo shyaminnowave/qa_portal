@@ -22,3 +22,9 @@ class CustomPagination(PageNumberPagination):
             ('message', 'Success'),
             ('data', data)
         ]))
+
+
+class CustomPageNumberPagination(CustomPagination):
+
+    page_size = 14
+

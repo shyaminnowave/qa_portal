@@ -1,11 +1,9 @@
 import re
-from traceback import print_tb
-
 from rest_framework import serializers
 from simple_history.utils import update_change_reason
 from apps.account.models import Account
 from apps.testcases.models import TestCaseModel, TestCaseStep, NatcoStatus, TestcaseExcelResult, TestReport, \
-    TestCaseChoices, Comment, ScriptIssue
+    TestCaseChoices, Comment, ScriptIssue, TestCaseScript
 from apps.stbs.models import Natco, NactoManufacturesLanguage, NatcoRelease
 from datetime import datetime
 from django.contrib.contenttypes.models import ContentType
@@ -113,20 +111,29 @@ class TestStepSerializer(serializers.Serializer):
 class NatcoStatusSerializer(serializers.ModelSerializer):
 
     jira_id = serializers.IntegerField(read_only=True)
-    jira_summary = serializers.CharField(read_only=True)
+    summary = serializers.CharField(read_only=True)
 
     class Meta:
         model = NatcoStatus
-        fields = ('id', 'natco', 'language', 'jira_id', 'jira_summary', 'device', 'test_case', 'status', 'applicable')
+        fields = ['id', 'natco', 'language', 'jira_id', 'summary', 'device', 'test_case', 'status', 'applicable']
+
+
+    def __init__(self, *args, **kwargs):
+        request = kwargs['context']['request'] if 'context' in kwargs and 'request' in kwargs['context'] else None
+        resolve_match = getattr(request, 'resolver_match', None)
+        if resolve_match.url_name == 'natco-details':
+            fields = ['user', 'modified']
+            self.Meta.fields.extend(fields)
+        if resolve_match.url_name == 'testcase-natco':
+            self.Meta.fields = ['id', 'natco', 'language', 'jira_id', 'summary', 'device', 'status',
+                                'applicable']
+        super(NatcoStatusSerializer, self).__init__(*args, **kwargs)
 
     def to_representation(self, instance):
         represent = super(NatcoStatusSerializer, self).to_representation(instance)
-        represent['natco'] = instance.natco.natco
-        represent['language'] = instance.language.language_name
-        represent['device'] = instance.device.name
         represent['test_case'] = instance.test_case.test_name
         represent['jira_id'] = instance.test_case.jira_id
-        represent['jira_summary'] = instance.test_case.jira_summary
+        represent['summary'] = instance.test_case.summary if instance.test_case.summary else None
         represent['applicable'] = "True" if instance.applicable else "False"
         return represent
 
@@ -134,20 +141,22 @@ class NatcoStatusSerializer(serializers.ModelSerializer):
 class TestCaseSerializer(serializers.ModelSerializer):
 
     test_steps = StepDataSerializer(many=True, required=False)
-    created = serializers.SerializerMethodField()
-    modified = serializers.SerializerMethodField()
-    last_fifty_result = serializers.SerializerMethodField()
+    created = serializers.SerializerMethodField(required=False, read_only=True)
+    modified = serializers.SerializerMethodField(required=False, read_only=True)
+    last_fifty_result = serializers.SerializerMethodField(required=False, read_only=True)
     history_change_reason = serializers.CharField(required=False, write_only=True)
 
     class Meta:
         model = TestCaseModel
         fields = ('id', 'test_name', 'jira_id', 'summary', 'description', 'status', 'priority',
-                  'automation_status', 'test_steps', 'created', 'modified', 'last_fifty_result', 'history_change_reason')
+                  'automation_status', 'test_steps', 'testcase_type', 'created', 'modified', 'last_fifty_result',
+                  'history_change_reason')
 
     def __init__(self, *args, **kwargs):
-        request = kwargs['context']['request'] if 'conetext' in kwargs and 'request' in kwargs['context'] else None
-        if request and request.path == 'create/test-case/':
-            self.Meta.fields = ['test_name', 'summary', 'description', 'testcase_type']
+        request = kwargs['context']['request'] if 'context' in kwargs and 'request' in kwargs['context'] else None
+        if request and request.path == '/api/create/test-case/':
+            self.Meta.fields = ('id', 'test_name', 'summary', 'description', 'testcase_type', 'created', 'modified',
+                                'status', 'automation_status', 'last_fifty_result', 'test_steps', 'history_change_reason')
         super().__init__(*args, **kwargs)
 
     def validate_test_name(self, value):
@@ -177,7 +186,7 @@ class TestCaseSerializer(serializers.ModelSerializer):
         ] if _data else []
 
     def update(self, instance, validated_data):
-        history_change_reason = validated_data.get('history_change_reason', "Script Issues Raised")
+        history_change_reason = validated_data.get('history_change_reason', 'Script Issue')
         instance = super().update(instance, validated_data)
         if history_change_reason:
             update_change_reason(instance, history_change_reason)
@@ -347,6 +356,7 @@ class DistinctTestResultSerializer(serializers.Serializer):
     def get_min_ram(self, obj):
         return obj['min_ram']
 
+
 class HistorySerializer(serializers.Serializer):
 
     history_id = serializers.PrimaryKeyRelatedField(read_only=True)
@@ -443,7 +453,6 @@ class CommentSerializer(serializers.ModelSerializer):
         if obj_instance:
             cmd = Comment.objects.create(content_type=self.get_model_instance(), object_id=obj_instance.id,
                                          **validated_data)
-            print(cmd)
             return True
         raise ScriptIssue.DoesNotExist("Object Does Not Exist")
 
@@ -522,6 +531,68 @@ class ScriptIssueSerializer(serializers.ModelSerializer):
         return represent
 
 
+class TestcaseScriptSerializer(serializers.ModelSerializer):
+
+    created = serializers.SerializerMethodField(required=False, read_only=True)
+    modified = serializers.SerializerMethodField(required=False, read_only=True)
+
+    def validate_natco(self, obj):
+        if obj in ['AT', 'PL', 'HR', 'HU', "MKT", "ME"]:
+            return obj
+        else:
+            raise serializers.ValidationError("Natco Does Not Exist")
+
+    class Meta:
+        model = TestCaseScript
+        fields = '__all__'
+
+    def __init__(self, *args, **kwargs):
+        request = kwargs['context']['request'] if 'context' in kwargs and 'request' in kwargs['context'] else None
+        resolver_match = getattr(request, 'resolver_match', None)
+        if request and resolver_match.url_name == 'testcase-scriptlist':
+            self.Meta.fields = (
+                'id',
+                'script_name', 
+                'script_location',
+                'script_type',
+                'description',
+                'developed_by',
+                'modified_by',
+                'natco',
+                'created',
+                'modified',
+            )
+        elif request and resolver_match.url_name == 'testcase-create-script':
+            self.Meta.fields = (
+                'id',
+                'script_name',
+                'script_location',
+                'script_type',
+                'testcase',
+                'description',
+                'developed_by',
+                'natco',
+                'created',
+                'modified'
+            )
+        super().__init__(*args, **kwargs)
 
 
+    def get_created(self, obj):
+        data = datetime.fromisoformat(str(obj.created))
+        return data.strftime("%d-%m-%Y")
 
+    def get_modified(self, obj):
+        data = datetime.fromisoformat(str(obj.created))
+        return data.strftime("%d-%m-%Y")
+
+    def to_representation(self, instance):
+        represent = super().to_representation(instance)
+        resolve_match = getattr(self.context['request'], 'resolver_match', None)
+        if resolve_match.url_name == 'testcase-scriptlist':
+            represent['developed_by'] = instance.developed_by.fullname if instance.developed_by else None
+        else:
+            represent['developed_by'] = instance.developed_by.fullname if instance.developed_by else None
+            represent['reviewed_by'] = instance.reviewed_by.fullname if instance.reviewed_by else None
+            represent['modified_by'] = instance.modified_by.fullname if instance.modified_by else None
+        return represent
