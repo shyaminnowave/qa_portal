@@ -421,6 +421,7 @@ class TestCaseNatcoList(generics.ListAPIView):
 )
 class TestCaseNatcoDetail(cgenerics.CustomRetrieveUpdateDestroyAPIView):
     # permission_classes = [AdminPermission]
+    authentication_classes = [JWTAuthentication,]
     serializer_class = NatcoStatusSerializer
     lookup_field = "pk"
 
