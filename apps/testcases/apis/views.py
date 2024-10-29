@@ -335,6 +335,7 @@ class TestCaseNatcoView(generics.ListAPIView):
 )
 class TestCaseNatcoList(generics.ListAPIView):
     # permission_classes = [AdminPermission]
+    authentication_classes = [JWTAuthentication,]
     serializer_class = NatcoStatusSerializer
     filterset_class = NatcoStatusFilter
     pagination_class = CustomPagination

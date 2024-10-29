@@ -112,10 +112,12 @@ class NatcoStatusSerializer(serializers.ModelSerializer):
 
     jira_id = serializers.IntegerField(read_only=True)
     summary = serializers.CharField(read_only=True)
+    history_change_reason = serializers.CharField(required=False, write_only=True)
 
     class Meta:
         model = NatcoStatus
-        fields = ['id', 'natco', 'language', 'jira_id', 'summary', 'device', 'test_case', 'status', 'applicable']
+        fields = ['id', 'natco', 'language', 'jira_id', 'summary', 'device', 'test_case', 'status', 'applicable',
+                  'history_change_reason']
 
 
     def __init__(self, *args, **kwargs):
@@ -126,8 +128,15 @@ class NatcoStatusSerializer(serializers.ModelSerializer):
             self.Meta.fields.extend(fields)
         if resolve_match.url_name == 'testcase-natco':
             self.Meta.fields = ['id', 'natco', 'language', 'jira_id', 'summary', 'device', 'status',
-                                'applicable']
+                                'applicable', 'history_change_reason']
         super(NatcoStatusSerializer, self).__init__(*args, **kwargs)
+
+    def update(self, instance, validated_data):
+        history_change_reason = validated_data.get('history_change_reason', 'Natco Status Changed')
+        instance = super().update(instance, validated_data)
+        if history_change_reason:
+            update_change_reason(instance, history_change_reason)
+        return instance
 
     def to_representation(self, instance):
         represent = super(NatcoStatusSerializer, self).to_representation(instance)
@@ -189,7 +198,12 @@ class TestCaseSerializer(serializers.ModelSerializer):
         ] if _data else []
 
     def update(self, instance, validated_data):
-        history_change_reason = validated_data.get('history_change_reason', 'Script Issue')
+        message = ''
+        if self.description != validated_data.get("description"):
+            message = 'Description Changed'
+        else:
+            message = 'Script Issues'
+        history_change_reason = validated_data.get('history_change_reason', message)
         instance = super().update(instance, validated_data)
         if history_change_reason:
             update_change_reason(instance, history_change_reason)
