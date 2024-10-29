@@ -199,7 +199,7 @@ class TestCaseSerializer(serializers.ModelSerializer):
 
     def update(self, instance, validated_data):
         message = ''
-        if self.description != validated_data.get("description"):
+        if instance.description != validated_data.get("description", instance.description):
             message = 'Description Changed'
         else:
             message = 'Script Issues'
