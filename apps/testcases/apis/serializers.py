@@ -410,7 +410,7 @@ class HistorySerializer(serializers.Serializer):
 
             # If no differences are detected, return a message or empty list
             if not differences:
-                return ["No detectable changes"]
+                differences["natco_status"] = "Natco status changed"
 
             # Format differences as a list of dictionaries
             return [{field: desc} for field, desc in differences.items()]
