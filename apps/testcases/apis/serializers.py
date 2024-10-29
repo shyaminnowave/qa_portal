@@ -154,7 +154,7 @@ class TestCaseSerializer(serializers.ModelSerializer):
 
     def __init__(self, *args, **kwargs):
         request = kwargs['context']['request'] if 'context' in kwargs and 'request' in kwargs['context'] else None
-        resolve_match = getattr(self.context['request'], 'resolver_match', None)
+        resolve_match = getattr(kwargs['context']['request'], 'resolver_match', None)
         if request and request.path == '/api/create/test-case/':
             self.Meta.fields = ('id', 'test_name', 'summary', 'description', 'testcase_type', 'created', 'modified',
                                 'status', 'automation_status', 'last_fifty_result', 'test_steps', 'history_change_reason')
