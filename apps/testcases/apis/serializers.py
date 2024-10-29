@@ -432,6 +432,7 @@ class HistorySerializer(serializers.Serializer):
         represent = super().to_representation(instance)
         represent['history_type'] = "Create" if instance.history_type == '+' else "Update" if instance.history_type == '~' else "Delete"
         represent['changed_to'] = self.get_changed_to(instance)
+        represent['history_change_reason'] = instance.history_change_reason if instance.history_change_reason else "Natco status changed"
         represent['history_user'] = self.account_fullname(
             instance.history_user
         ) if instance.history_user else None
