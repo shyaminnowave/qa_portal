@@ -371,38 +371,38 @@ class HistorySerializer(serializers.Serializer):
     test_name = serializers.CharField()
 
     def get_changed_to(self, obj):
-        # Retrieve the TestCaseModel instance
-        _instance = TestCaseModel.objects.get(id=obj.id)
-
-        # Get all historical records ordered by history_date
-        history_records = list(_instance.history.filter(history_type='~').order_by('history_date'))
-
-        # Find the index of the current history record
         try:
+            # Retrieve the TestCaseModel instance by ID
+            _instance = TestCaseModel.objects.get(id=obj.id)
+            # Fetch all historical records, filtering by type if needed
+            history_records = list(_instance.history.filter(history_type='~').order_by('history_date'))
+
+            # Locate the current record's position in the historical timeline
             current_index = history_records.index(obj)
-        except ValueError:
-            # If the current object is not found in history_records, return an empty list
-            return []
+            if current_index == 0:
+                return []  # No previous records to compare
 
-        if current_index == 0:
-            # No previous record to compare with, so no changes
-            return []
+            # Compare current record to the previous one
+            old_record = history_records[current_index - 1]
+            new_record = obj
+            delta = new_record.diff_against(old_record)
 
-        # Get the previous history record
-        old_record = history_records[current_index - 1]
-        new_record = obj
+            # Map changes, verifying data exists for both old and new states
+            differences = {
+                change.field: f"changed from '{change.old}' to '{change.new}'"
+                for change in delta.changes
+                if change.old is not None and change.new is not None
+            }
 
-        # Calculate the differences between the two records
-        delta = new_record.diff_against(old_record)
-        differences = {}
+            # If no differences are detected, return a message or empty list
+            if not differences:
+                return ["No detectable changes"]
 
-        for change in delta.changes:
-            differences[change.field] = f"changed from '{change.old}' to '{change.new}'"
+            # Format differences as a list of dictionaries
+            return [{field: desc} for field, desc in differences.items()]
 
-        # Convert the differences dictionary to a list of dictionaries
-        differences_list = [{field: desc} for field, desc in differences.items()]
-
-        return differences_list
+        except (ValueError, TestCaseModel.DoesNotExist):
+            return ["Error retrieving change details"]
 
     def get_created(self, obj):
         data = datetime.fromisoformat(str(obj))
