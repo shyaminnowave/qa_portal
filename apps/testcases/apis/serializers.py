@@ -117,7 +117,7 @@ class NatcoStatusSerializer(serializers.ModelSerializer):
     class Meta:
         model = NatcoStatus
         fields = ['id', 'natco', 'language', 'jira_id', 'summary', 'device', 'test_case', 'status', 'applicable',
-                  'history_change_reason']
+                  'history_change_reason', 'modified']
 
 
     def __init__(self, *args, **kwargs):
@@ -128,7 +128,7 @@ class NatcoStatusSerializer(serializers.ModelSerializer):
             self.Meta.fields.extend(fields)
         if resolve_match.url_name == 'testcase-natco':
             self.Meta.fields = ['id', 'natco', 'language', 'jira_id', 'summary', 'device', 'status',
-                                'applicable', 'history_change_reason']
+                                'applicable', 'history_change_reason', 'modified']
         super(NatcoStatusSerializer, self).__init__(*args, **kwargs)
 
     def update(self, instance, validated_data):
@@ -143,6 +143,7 @@ class NatcoStatusSerializer(serializers.ModelSerializer):
         represent['test_case'] = instance.test_case.test_name
         represent['jira_id'] = instance.test_case.jira_id
         represent['summary'] = instance.test_case.summary if instance.test_case.summary else None
+        represent['modified'] = instance.modified.fullname if instance.modified else None
         represent['applicable'] = "True" if instance.applicable else "False"
         return represent
 
