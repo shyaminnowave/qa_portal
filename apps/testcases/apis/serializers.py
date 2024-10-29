@@ -394,7 +394,7 @@ class HistorySerializer(serializers.Serializer):
             # Locate the current record's position in the historical timeline
             current_index = history_records.index(obj)
             if current_index == 0:
-                return []  # No previous records to compare
+                return ["Natco status changed"]  # No previous records to compare
 
             # Compare current record to the previous one
             old_record = history_records[current_index - 1]
