@@ -216,6 +216,11 @@ class TestCaseDetailView(cgenerics.CustomRetrieveUpdateDestroyAPIView):
         # 'device', 'natco', 'user').filter(test_case_id=self.kwargs.get('jira_id'))))
         return queryset
 
+    def get_serializer_context(self):
+        return {
+            'request': self.request
+        }
+
     def get(self, request, *args, **kwargs):
         response = super().retrieve(request, *args, **kwargs)
         # queryset = NatcoStatus.objects.select_related(
