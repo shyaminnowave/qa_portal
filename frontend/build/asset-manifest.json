@@ -1,7 +1,7 @@
 {
   "files": {
-    "main.css": "/static/css/main.353f1c61.css",
-    "main.js": "/static/js/main.238cb823.js",
+    "main.css": "/static/css/main.ad2c6ed4.css",
+    "main.js": "/static/js/main.94cd774e.js",
     "static/css/381.4f3bd63f.chunk.css": "/static/css/381.4f3bd63f.chunk.css",
     "static/js/381.ef3523bd.chunk.js": "/static/js/381.ef3523bd.chunk.js",
     "static/css/431.c8a48433.chunk.css": "/static/css/431.c8a48433.chunk.css",
@@ -16,8 +16,8 @@
     "static/media/output-onlinepngtools (1).png": "/static/media/output-onlinepngtools (1).1cc088eb54aa5453f3f0.png",
     "static/media/innowave_icon.png": "/static/media/innowave_icon.0f175a41a7db6d9f320e.png",
     "index.html": "/index.html",
-    "main.353f1c61.css.map": "/static/css/main.353f1c61.css.map",
-    "main.238cb823.js.map": "/static/js/main.238cb823.js.map",
+    "main.ad2c6ed4.css.map": "/static/css/main.ad2c6ed4.css.map",
+    "main.94cd774e.js.map": "/static/js/main.94cd774e.js.map",
     "381.4f3bd63f.chunk.css.map": "/static/css/381.4f3bd63f.chunk.css.map",
     "381.ef3523bd.chunk.js.map": "/static/js/381.ef3523bd.chunk.js.map",
     "431.c8a48433.chunk.css.map": "/static/css/431.c8a48433.chunk.css.map",
@@ -31,7 +31,7 @@
     "462.b24ae3ee.chunk.js.map": "/static/js/462.b24ae3ee.chunk.js.map"
   },
   "entrypoints": [
-    "static/css/main.353f1c61.css",
-    "static/js/main.238cb823.js"
+    "static/css/main.ad2c6ed4.css",
+    "static/js/main.94cd774e.js"
   ]
 }
