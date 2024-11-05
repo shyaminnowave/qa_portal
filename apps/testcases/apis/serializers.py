@@ -175,8 +175,6 @@ class TestCaseSerializer(serializers.ModelSerializer):
     def validate_test_name(self, value):
         if value is None:
             raise serializers.ValidationError("Test Name Cannot be Empty")
-        if value and not re.match(r"^[a-zA-Z0-9_\s]+$", value):
-            raise serializers.ValidationError("Test Name Cannot Contains Numbers")
         return value
 
     def get_created(self, obj):
