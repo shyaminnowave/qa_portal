@@ -249,18 +249,24 @@ class TestCaseStepView(cgenerics.CustomCreateAPIView, cgenerics.CustomUpdateAPIV
     serializer_class = TestStepSerializer
 
     def post(self, request, *args, **kwargs):
-        serializer = self.get_serializer(data=request.data)
+        try:
+            serializer = self.get_serializer(data=request.data)
 
-        if serializer.is_valid(raise_exception=True):
-            serializer.create(serializer.validated_data)
-            self.response_format['status'] = status.HTTP_201_CREATED
-            self.response_format['data'] = serializer.data
-            self.response_format['message'] = 'Success'
+            if serializer.is_valid(raise_exception=True):
+                serializer.create(serializer.validated_data)
+                self.response_format['status'] = status.HTTP_201_CREATED
+                self.response_format['data'] = serializer.data
+                self.response_format['message'] = 'Success'
+                return Response(self.response_format, status=status.HTTP_201_CREATED)
+            self.response_format['status'] = status.HTTP_400_BAD_REQUEST
+            self.response_format['data'] = 'Error'
+            self.response_format['message'] = 'Error'
             return Response(self.response_format, status=status.HTTP_201_CREATED)
-        self.response_format['status'] = status.HTTP_400_BAD_REQUEST
-        self.response_format['data'] = 'Error'
-        self.response_format['message'] = 'Error'
-        return Response(self.response_format, status=status.HTTP_201_CREATED)
+        except Exception as e:
+            self.response_format['status'] = False
+            self.response_format['status_code'] = status.HTTP_500_INTERNAL_SERVER_ERROR
+            self.response_format['message'] = str(e)
+            return Response(self.response_format, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
     def put(self, request, *args, **kwargs):
         testcase_instance = TestCaseStep.objects.get(id=request.data['id'])

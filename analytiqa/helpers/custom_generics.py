@@ -14,6 +14,7 @@ class CustomCreateAPIView(mixins.CreateModelMixin, GenericAPIView):
         super().__init__(**kwargs)
 
     def post(self, request, *args, **kwargs):
+        try:
             response = super().create(request, *args, **kwargs)
             if response.status_code == status.HTTP_201_CREATED:
                 self.response_format['status'] = True
@@ -27,7 +28,11 @@ class CustomCreateAPIView(mixins.CreateModelMixin, GenericAPIView):
                 self.response_format['data'] = 'Error'
                 self.response_format['message'] = "User Creation Failed"
                 return Response(self.response_format, status=status.HTTP_400_BAD_REQUEST)
-
+        except Exception as e:
+            self.response_format['status'] = False
+            self.response_format['status_code'] = status.HTTP_500_INTERNAL_SERVER_ERROR
+            self.response_format['message'] = str(e)
+            return Response(self.response_format, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 class CustomRetriveAPIVIew(mixins.RetrieveModelMixin, GenericAPIView): 
 
