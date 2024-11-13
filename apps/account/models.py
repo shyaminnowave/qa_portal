@@ -129,8 +129,8 @@ class ThirdPartyIntegrationTable(TimeStampedModel):
     app = models.CharField(choices=ThirdPartyAPP.choices, max_length=50, default=ThirdPartyAPP.JIRA)
     account = models.ForeignKey(Account, on_delete=models.CASCADE, related_name='third_party_integration_table',
                                 to_field='email')
-    username = models.CharField(_('username'), max_length=30, unique=True)
-    token = models.CharField(_('token'), max_length=330, unique=True)
+    username = models.CharField(_('username'), max_length=30)
+    token = models.CharField(_('token'), max_length=330)
     is_active = models.BooleanField(_('active'), default=True)
 
     class Meta:
