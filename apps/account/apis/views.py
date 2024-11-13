@@ -397,7 +397,8 @@ class JiraIntgrationView(generics.GenericAPIView):
             self.response_format['status'] = False
             self.response_format['status_code'] = status.HTTP_400_BAD_REQUEST
             self.response_format['data'] = None
-            self.response_format['message'] = e.detail
+            self.response_format['message'] = str(e)
+            return Response(self.response_format, status=status.HTTP_400_BAD_REQUEST)
 
 
 class DeactivateIntegrationView(generics.GenericAPIView):
