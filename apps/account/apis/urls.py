@@ -16,6 +16,9 @@ urlpatterns = [
     path('permissions/', views.PermissionListView.as_view()),
     path('group/', views.GroupView.as_view()),
     path('create-group/', views.GroupCreateView.as_view()),
-    path('group-detail/<int:pk>/', views.GroupDetailView.as_view())
+    path('group-detail/<int:pk>/', views.GroupDetailView.as_view()),
+    path('integration/', views.JiraIntgrationView.as_view()),
+    path('deactivate/', views.DeactivateIntegrationView.as_view()),
+    path('set-project/', views.SetProjectView.as_view()),
 
 ]

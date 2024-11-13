@@ -121,7 +121,12 @@ class LoginHistory(models.Model):
 
 class ThirdPartyIntegrationTable(TimeStampedModel):
 
+    class ThirdPartyAPP(models.TextChoices):
+        JIRA = 'jira', _('JIRA')
+        CONFLUENCE = 'confluence', _('Confluence')
+
     domain_url = models.URLField()
+    app = models.CharField(choices=ThirdPartyAPP.choices, max_length=50, default=ThirdPartyAPP.JIRA)
     account = models.ForeignKey(Account, on_delete=models.CASCADE, related_name='third_party_integration_table',
                                 to_field='email')
     username = models.CharField(_('username'), max_length=30, unique=True)

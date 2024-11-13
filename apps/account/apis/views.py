@@ -368,6 +368,8 @@ class AccountTokenRefreshView(TokenViewBase):
 
 
 class JiraIntgrationView(generics.GenericAPIView):
+
+    authentication_classes = [JWTAuthentication,]
     
     def __init__(self, **kwargs: Any) -> None:
         self.response_format = ResponseInfo().response
@@ -376,17 +378,54 @@ class JiraIntgrationView(generics.GenericAPIView):
     serializer_class = JiraSerializer
 
     def post(self, request, *args, **kwargs):
-        serializer = self.get_serializer(data=request.data)
-        if serializer.is_valid():
-            serializer.save()
-            self.response_format['status'] = True
-            self.response_format['status_code'] = status.HTTP_200_OK
-            self.response_format['data'] = serializer.data
-            self.response_format['message'] = "Success"
-        else:
+        try:
+            serializer = self.get_serializer(data=request.data)
+            if serializer.is_valid():
+                serializer.save()
+                self.response_format['status'] = True
+                self.response_format['status_code'] = status.HTTP_200_OK
+                self.response_format['data'] = serializer.data
+                self.response_format['message'] = "Success"
+            else:
+                self.response_format['status'] = False
+                self.response_format['status_code'] = status.HTTP_400_BAD_REQUEST
+                self.response_format['data'] = None
+                self.response_format['message'] = serializer.errors
+                return Response(self.response_format, status=status.HTTP_400_BAD_REQUEST)
+            return Response(self.response_format, status=status.HTTP_200_OK)
+        except Exception as e:
             self.response_format['status'] = False
             self.response_format['status_code'] = status.HTTP_400_BAD_REQUEST
-            self.response_format['data'] = serializer.errors
-            self.response_format['message'] = serializer.errors
-            return Response(self.response_format, status=status.HTTP_400_BAD_REQUEST)
-        return Response(self.response_format, status=status.HTTP_200_OK)
+            self.response_format['data'] = None
+            self.response_format['message'] = e.detail
+
+
+class DeactivateIntegrationView(generics.GenericAPIView):
+
+    authentication_classes = [JWTAuthentication,]
+
+    def post(self, request, *args, **kwargs):
+        try:
+            queryset = ThirdPartyIntegrationTable.objects.filter(account=request.user, app='jira')
+            queryset.is_active = False
+            queryset.save()
+            return Response(queryset.data, status=status.HTTP_200_OK)
+        except Exception as e:
+            return Response(str(e), status=status.HTTP_400_BAD_REQUEST)
+
+
+class SetProjectView(APIView):
+
+    def __init__(self, **kwargs: Any) -> None:
+        self.response_format = ResponseInfo().response
+        super().__init__(**kwargs)
+
+    def post(self, request, *args, **kwargs):
+        project = request.data.get('project', None)
+        self.response_format['status'] = True
+        self.response_format['status_code'] = status.HTTP_200_OK
+        self.response_format['data'] = None
+        self.response_format['message'] = "Success"
+        response = Response(self.response_format, status=status.HTTP_200_OK)
+        response.set_cookie(key='project', value=project)
+        return response
