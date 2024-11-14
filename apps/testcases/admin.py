@@ -57,12 +57,12 @@ class ScriptIssueAdmin(SimpleHistoryAdmin):
     list_display = ['id', 'summary']
     inlines = [CommentAdmin]
 
-
 admin.site.register(TestCaseModel, TestCaseModelAdmin)
 admin.site.register(TestcaseExcelResult, TestResultAdmin)
 admin.site.register(NatcoStatus, NatcoStatusAdmin)
 admin.site.register(TestReport, ReportAdmin)
 admin.site.register(TestCaseScript)
 admin.site.register(Comment)
+admin.site.register(TestCaseStep, ImportExportModelAdmin)
 
 # admin.site.register(Comment)
