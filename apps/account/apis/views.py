@@ -378,10 +378,6 @@ class JiraIntgrationView(generics.GenericAPIView):
 
     serializer_class = JiraSerializer
 
-    def get_queryset(self):
-        jira_instance = ThirdPartyIntegrationTable.objects.filter(account=self.request.user).first()
-        return jira_instance
-
     def post(self, request, *args, **kwargs):
         try:
             serializer = self.get_serializer(data=request.data)
@@ -391,8 +387,8 @@ class JiraIntgrationView(generics.GenericAPIView):
                 combined_data = serializer.data.copy()
                 self.response_format['status'] = True
                 self.response_format['status_code'] = status.HTTP_200_OK
-                self.response_format['data'] = combined_data
-                self.response_format['message'] = "Success"
+                self.response_format['data'] = serializer.data
+                self.response_format['message'] = combined_data
             else:
                 self.response_format['status'] = False
                 self.response_format['status_code'] = status.HTTP_400_BAD_REQUEST
