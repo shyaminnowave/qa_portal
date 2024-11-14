@@ -385,10 +385,11 @@ class JiraIntgrationView(generics.GenericAPIView):
                 serializer.save()
                 _data = get_project(request.data)
                 combined_data = serializer.data.copy()
+                combined_data['project'] = _data
                 self.response_format['status'] = True
                 self.response_format['status_code'] = status.HTTP_200_OK
-                self.response_format['data'] = serializer.data
-                self.response_format['message'] = combined_data
+                self.response_format['data'] = combined_data
+                self.response_format['message'] = "Success"
             else:
                 self.response_format['status'] = False
                 self.response_format['status_code'] = status.HTTP_400_BAD_REQUEST
