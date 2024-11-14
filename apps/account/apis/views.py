@@ -391,7 +391,7 @@ class JiraIntgrationView(generics.GenericAPIView):
                 combined_data = serializer.data.copy()
                 self.response_format['status'] = True
                 self.response_format['status_code'] = status.HTTP_200_OK
-                self.response_format['data'] = serializer.data
+                self.response_format['data'] = combined_data
                 self.response_format['message'] = "Success"
             else:
                 self.response_format['status'] = False
