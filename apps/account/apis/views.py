@@ -26,6 +26,7 @@ from apps.account.permissions import AdminUserPermission, DjangoModelPermissions
 from rest_framework.permissions import IsAuthenticated
 from analytiqa.helpers.renders import ResponseInfo
 from analytiqa.helpers import custom_generics as cgenerics
+from apps.account.utils import get_project
 
 
 # ------------------------------ ListAPIS ------------------------------
@@ -377,11 +378,17 @@ class JiraIntgrationView(generics.GenericAPIView):
 
     serializer_class = JiraSerializer
 
+    def get_queryset(self):
+        jira_instance = ThirdPartyIntegrationTable.objects.filter(account=self.request.user).first()
+        return jira_instance
+
     def post(self, request, *args, **kwargs):
         try:
             serializer = self.get_serializer(data=request.data)
             if serializer.is_valid():
                 serializer.save()
+                _data = get_project(request.data)
+                combined_data = serializer.data.copy()
                 self.response_format['status'] = True
                 self.response_format['status_code'] = status.HTTP_200_OK
                 self.response_format['data'] = serializer.data
