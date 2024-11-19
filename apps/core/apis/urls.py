@@ -10,6 +10,6 @@ urlpatterns = [
     path('project-list/', ProjectAPIView.as_view(), name='project-list'),
     path('project-details/<int:pk>/', ProjectDetailAPIView.as_view(), name='project-detail'),
     path('project-integration/', ProjectIntegrationCreateView.as_view(), name='project-integration'),
-    path('project-integrate/detail/<int:pk>/', ProjectIntegrateDetailView.as_view(), name='project-integrate'),
+    path('project-integration/detail/<int:pk>/', ProjectIntegrateDetailView.as_view(), name='project-integrate'),
 
 ]
