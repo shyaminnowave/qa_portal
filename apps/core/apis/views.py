@@ -20,7 +20,7 @@ class IssuesAPIView(generics.ListAPIView):
 
     def get(self, request, *args, **kwargs):
         project = self.kwargs.get('project')
-        api_token = ThirdPartyIntegrationTable.objects.filter(account='shyam6132@gmail.com').first()
+        api_token = ProjectIntegration.objects.filter(key=project).first()
         _data = get_issues(data=api_token, project=project, startAT=request.GET.get('startsAT', 0),
                            limit=self.request.GET.get('maxResults', 50))
         page = self.paginate_queryset(_data)
