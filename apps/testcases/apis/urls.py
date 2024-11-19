@@ -6,7 +6,7 @@ from apps.testcases.apis import views
 app_name = 'testcases'
 
 urlpatterns = [
-    path('test-case/<str:type>/', views.TestCaseListView.as_view()),
+    path('<str:project>/test-case/<str:type>/', views.TestCaseListView.as_view()),
     path('create/test-case/', views.TestCaseView.as_view()),
     path('test-step/', views.TestCaseStepView.as_view()),
     path('test-step/<int:id>/', views.TestStepDeleteView.as_view()),

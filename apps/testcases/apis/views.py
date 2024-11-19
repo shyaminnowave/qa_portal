@@ -58,7 +58,6 @@ class ResponseTemplateApi:
     def response(self):
         if self.instance == True:
             self.response_format["status"] = True
-            self.response_format["status"] = True
             self.response_format["status_code"] = status.HTTP_200_OK
             self.response_format["data"] = "Success"
             self.response_format["message"] = "Success"
@@ -154,12 +153,13 @@ class TestCaseListView(generics.ListAPIView):
 
     def get_queryset(self):
         queryset = None
+        project = self.kwargs.get("project", None)
         if self.kwargs.get('type') == 'performance':
-            queryset = TestCaseModel.objects.performance_testcase()
+            queryset = TestCaseModel.objects.filter(project=project).performance_testcase()
         elif self.kwargs.get('type') == 'smoke':
-            queryset = TestCaseModel.objects.smoke_testcase()
+            queryset = TestCaseModel.objects.filter(project=project).smoke_testcase()
         elif self.kwargs.get('type') == 'soak':
-            queryset = TestCaseModel.objects.soak_testcase()
+            queryset = TestCaseModel.objects.filter(project=project).soak_testcase()
         return queryset.only("jira_id",
                             "test_name",
                             "priority",
@@ -218,7 +218,7 @@ class TestCaseDetailView(cgenerics.CustomRetrieveUpdateDestroyAPIView):
 
     def get_serializer_context(self):
         return {
-            'request': self.request
+            "request": self.request
         }
 
     def get(self, request, *args, **kwargs):
@@ -301,7 +301,6 @@ class TestStepDeleteView(cgenerics.CustomDestroyAPIView):
     serializer_class = TestStepSerializer
 
     def delete(self, request, *args, **kwargs):
-        print(kwargs.get('id'))
         teststep_instance = TestCaseStep.objects.get(id=kwargs.get('id'))
         serializer = self.get_serializer(instance=teststep_instance)
         serializer.delete(teststep_instance)
@@ -341,7 +340,6 @@ class TestCaseNatcoView(generics.ListAPIView):
 )
 class TestCaseNatcoList(generics.ListAPIView):
     # permission_classes = [AdminPermission]
-    authentication_classes = [JWTAuthentication,]
     serializer_class = NatcoStatusSerializer
     filterset_class = NatcoStatusFilter
     pagination_class = CustomPagination
@@ -427,7 +425,6 @@ class TestCaseNatcoList(generics.ListAPIView):
 )
 class TestCaseNatcoDetail(cgenerics.CustomRetrieveUpdateDestroyAPIView):
     # permission_classes = [AdminPermission]
-    authentication_classes = [JWTAuthentication,]
     serializer_class = NatcoStatusSerializer
     lookup_field = "pk"
 
@@ -435,7 +432,6 @@ class TestCaseNatcoDetail(cgenerics.CustomRetrieveUpdateDestroyAPIView):
         queryset = NatcoStatus.objects.select_related("test_case").get(
             id=self.kwargs.get("pk")
         )
-        print(queryset)
         return queryset
 
     def get_serializer_context(self):

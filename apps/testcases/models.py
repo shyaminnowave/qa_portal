@@ -10,6 +10,8 @@ from django.contrib.contenttypes.fields import GenericForeignKey, GenericRelatio
 from django.contrib.contenttypes.models import ContentType
 from autoslug import AutoSlugField
 from apps.testcases.managers import TestCaseManager
+from apps.core.models import Projects
+
 # Create your models here.
 
 User = get_user_model()
@@ -84,6 +86,8 @@ class TestCaseModel(TimeStampedModel):
     automation_status = models.CharField(max_length=100, choices=AutomationChoices.choices,
                                          default=AutomationChoices.NOT_AUTOMATABLE)
     comments = GenericRelation("Comment", related_name='testcases')
+    created_by = models.ForeignKey(get_user_model(), on_delete=models.SET_NULL, blank=True, null=True, to_field='email')
+    project = models.ForeignKey(Projects, on_delete=models.SET_NULL, blank=True, null=True, default='DT', to_field='name')
     slug = AutoSlugField(populate_from='test_name', unique=True, always_update=True)
     history = HistoricalRecords()
     objects = TestCaseManager()

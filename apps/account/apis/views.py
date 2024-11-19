@@ -204,8 +204,8 @@ class LoginView(generics.GenericAPIView):
                 'refresh': token['refresh'],
                 'email': user.email,
                 'username': user.username,
-                'domain': api_token.domain_url if api_token else None,
-                'jira_username': api_token.username if api_token else None,
+                'domain': api_token.domain_url if api_token and api_token.domain_url else None,
+                'jira_username': api_token.username if api_token and api_token.username else None,
                 'token': api_token.token if api_token else None
             }
         return None
@@ -370,7 +370,7 @@ class AccountTokenRefreshView(TokenViewBase):
 
 class JiraIntgrationView(generics.GenericAPIView):
 
-    authentication_classes = [JWTAuthentication,]
+    authentication_classes = [JWTAuthentication, ]
     
     def __init__(self, **kwargs: Any) -> None:
         self.response_format = ResponseInfo().response
@@ -378,31 +378,50 @@ class JiraIntgrationView(generics.GenericAPIView):
 
     serializer_class = JiraSerializer
 
-    def post(self, request, *args, **kwargs):
+    def get_queryset(self):
+        jira_instance = ThirdPartyIntegrationTable.objects.filter(account=self.request.user, is_active=True).first()
+        return jira_instance
+
+    def get(self, request, *args, **kwargs):
+        serializer = JiraSerializer(self.get_queryset())
         try:
-            serializer = self.get_serializer(data=request.data)
-            if serializer.is_valid():
-                serializer.save()
-                _data = get_project(request.data)
-                combined_data = serializer.data.copy()
-                combined_data['project'] = _data
+            if serializer.data:
+                self.response_format['data'] = serializer.data
+                self.response_format['message'] = "Success"
                 self.response_format['status'] = True
                 self.response_format['status_code'] = status.HTTP_200_OK
-                self.response_format['data'] = combined_data
-                self.response_format['message'] = "Success"
+                return Response(self.response_format, status=status.HTTP_200_OK)
             else:
                 self.response_format['status'] = False
                 self.response_format['status_code'] = status.HTTP_400_BAD_REQUEST
                 self.response_format['data'] = None
-                self.response_format['message'] = serializer.errors
+                self.response_format['message'] = str(InvalidToken.default_detail)
                 return Response(self.response_format, status=status.HTTP_400_BAD_REQUEST)
-            return Response(self.response_format, status=status.HTTP_200_OK)
         except Exception as e:
             self.response_format['status'] = False
             self.response_format['status_code'] = status.HTTP_400_BAD_REQUEST
             self.response_format['data'] = None
             self.response_format['message'] = str(e)
             return Response(self.response_format, status=status.HTTP_400_BAD_REQUEST)
+
+    def post(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            _data = get_project(request.data)
+            combined_data = serializer.data.copy()
+            combined_data['project'] = _data
+            self.response_format['status'] = True
+            self.response_format['status_code'] = status.HTTP_200_OK
+            self.response_format['data'] = combined_data
+            self.response_format['message'] = "Success"
+        else:
+            self.response_format['status'] = False
+            self.response_format['status_code'] = status.HTTP_400_BAD_REQUEST
+            self.response_format['data'] = serializer.errors
+            self.response_format['message'] = serializer.errors
+            return Response(self.response_format, status=status.HTTP_400_BAD_REQUEST)
+        return Response(self.response_format, status=status.HTTP_200_OK)
 
 
 class DeactivateIntegrationView(generics.GenericAPIView):
@@ -429,8 +448,11 @@ class SetProjectView(APIView):
         project = request.data.get('project', None)
         self.response_format['status'] = True
         self.response_format['status_code'] = status.HTTP_200_OK
-        self.response_format['data'] = None
+        self.response_format['data'] = "Cookie Created"
         self.response_format['message'] = "Success"
         response = Response(self.response_format, status=status.HTTP_200_OK)
         response.set_cookie(key='project', value=project)
         return response
+
+
+

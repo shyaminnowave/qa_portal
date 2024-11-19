@@ -4,7 +4,6 @@ from requests.auth import HTTPBasicAuth
 from rest_framework_simplejwt.tokens import RefreshToken
 from django.utils.crypto import get_random_string
 from django.contrib.auth import get_user_model
-from rest_framework_simplejwt.tokens import Token
 
 User = get_user_model()
 
@@ -39,6 +38,23 @@ def get_project(data):
     if response.status_code == 200:
         for names in response.json():
             projects.append(names['name'])
+        return projects
+    else:
+        return None
+
+
+def new_get_project(data):
+    project_url = f"{data.get('domain_url')}/rest/api/3/project"
+    auth = HTTPBasicAuth(data.get('username'), data.get('token'))
+    response = requests.get(project_url, auth=auth)
+    projects = []
+    if response.status_code == 200:
+        for names in response.json():
+            project = {
+                'key': names['key'],
+                'name': names['name']
+            }
+            projects.append(project)
         return projects
     else:
         return None

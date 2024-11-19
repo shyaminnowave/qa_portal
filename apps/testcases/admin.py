@@ -24,7 +24,7 @@ class CommentAdmin(GenericTabularInline):
     model = Comment
 
 
-class TestCaseModelAdmin(SimpleHistoryAdmin, ExportAdmin):
+class TestCaseModelAdmin(SimpleHistoryAdmin, ImportExportModelAdmin):
 
     list_display = ['id', 'test_name', 'priority', 'testcase_type', 'automation_status']
     # search_fields = ('jira_id',)
@@ -56,6 +56,7 @@ class ScriptIssueAdmin(SimpleHistoryAdmin):
 
     list_display = ['id', 'summary']
     inlines = [CommentAdmin]
+
 
 admin.site.register(TestCaseModel, TestCaseModelAdmin)
 admin.site.register(TestcaseExcelResult, TestResultAdmin)

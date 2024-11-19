@@ -80,6 +80,21 @@ class AccountSerializer(serializers.ModelSerializer):
                 return value
             raise serializers.ValidationError({"email": "Please Enter you Innowave Mail"})
 
+    def validate_fullname(self, value):
+        if value is None:
+            raise serializers.ValidationError("Fullname Field is should not be empty")
+        if re.search(r'\d', value):
+            raise serializers.ValidationError("Fullname Field is should contains any Numbers")
+        return value
+
+    def validate_password(self, value):
+        if value is None:
+            raise serializers.ValidationError("Password Field is should not be empty")
+        if not re.match(r'^(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*(),.?":{}|<>]).+$', value):
+            raise serializers.ValidationError("Password must contain at least one uppercase letter, one number, and one special character."
+            )
+        return value
+
     def validate(self, attrs):
         password = attrs.get('password')
         confirm_password = attrs.get('confirm_password')
@@ -190,4 +205,5 @@ class JiraSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = ThirdPartyIntegrationTable
-        fields = '__all__'
+        fields = ('domain_url', 'username', 'token', 'account')
+

@@ -117,7 +117,7 @@ class NatcoStatusSerializer(serializers.ModelSerializer):
     class Meta:
         model = NatcoStatus
         fields = ['id', 'natco', 'language', 'jira_id', 'summary', 'device', 'test_case', 'status', 'applicable',
-                  'history_change_reason', 'modified']
+                  'modified', 'history_change_reason']
 
 
     def __init__(self, *args, **kwargs):
@@ -160,7 +160,7 @@ class TestCaseSerializer(serializers.ModelSerializer):
         model = TestCaseModel
         fields = ('id', 'test_name', 'jira_id', 'summary', 'description', 'status', 'priority',
                   'automation_status', 'test_steps', 'testcase_type', 'created', 'modified', 'last_fifty_result',
-                  'history_change_reason')
+                  'created_by', 'history_change_reason')
 
     def __init__(self, *args, **kwargs):
         request = kwargs['context']['request'] if 'context' in kwargs and 'request' in kwargs['context'] else None

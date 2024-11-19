@@ -126,7 +126,7 @@ class ThirdPartyIntegrationTable(TimeStampedModel):
         CONFLUENCE = 'confluence', _('Confluence')
 
     domain_url = models.URLField()
-    app = models.CharField(choices=ThirdPartyAPP.choices, max_length=50, default=ThirdPartyAPP.JIRA)
+    app = models.CharField(max_length=255, choices=ThirdPartyAPP.choices, default=ThirdPartyAPP.JIRA, blank=True, null=True)
     account = models.ForeignKey(Account, on_delete=models.CASCADE, related_name='third_party_integration_table',
                                 to_field='email')
     username = models.CharField(_('username'), max_length=30)
@@ -136,4 +136,3 @@ class ThirdPartyIntegrationTable(TimeStampedModel):
     class Meta:
         verbose_name = 'Intergration Table'
         verbose_name_plural = 'Intergration Table'
-
