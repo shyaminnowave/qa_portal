@@ -1,7 +1,6 @@
 from rest_framework import generics
 from rest_framework.response import Response
 from rest_framework_simplejwt.authentication import JWTAuthentication
-from rest_framework.authentication import SessionAuthentication
 from apps.core.models import Projects, ProjectIntegration
 from apps.core.utils import get_issues
 from apps.account.models import ThirdPartyIntegrationTable
@@ -35,7 +34,7 @@ class ProjectAPIView(generics.ListCreateAPIView):
         self.response_format = ResponseInfo().response
         super().__init__(*args, **kwargs)
 
-    authentication_classes = [SessionAuthentication, JWTAuthentication]
+    authentication_classes = [JWTAuthentication]
 
     pagination_class = CustomPagination
     serializer_class = ProjectSerializer
@@ -77,7 +76,7 @@ class ProjectAPIView(generics.ListCreateAPIView):
 
 class ProjectDetailAPIView(cgenerics.CustomRetrieveUpdateAPIView):
     
-    authentication_classes = [SessionAuthentication, JWTAuthentication]
+    authentication_classes = [JWTAuthentication]
     serializer_class = ProjectSerializer
     
     def get_object(self):
@@ -95,7 +94,7 @@ class ProjectIntegrateDetailView(generics.GenericAPIView):
 
     def get_queryset(self):
         try:
-            queryset = ProjectIntegration.objects.get(project=self.kwargs.get('pk', None), is_active=True)
+            queryset = ProjectIntegration.objects.get(id=self.kwargs.get('pk', None), is_active=True)
             return queryset
         except Exception as e:
             return None
