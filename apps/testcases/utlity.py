@@ -6,6 +6,7 @@ from apps.testcases.models import (
     NatcoStatus,
     TestCaseChoices,
     TestCaseStep,
+    TestCaseMetaData
 )
 from apps.stbs.models import NactoManufacturesLanguage, STBNodeConfig, NatcoRelease
 from analytiqa.helpers.renders import ResponseInfo
@@ -48,9 +49,6 @@ class ReportExcel(ExcelFileFactory):
         _test_result = []
         try:
             for row in self._init_workbook().iter_rows(min_row=2, values_only=True):
-                print(
-                    f"jira-id: {row[4]}, load: {row[5]},  cpu: {row[6]}, ram: {row[7]}, cpu_75: {row[16]}, ram_76: {row[17]}, load_75: {row[15]}, date: {row[2]}, starttime: {row[8]}, endtime: {row[9]}"
-                )
                 if row[4]:
                     _data = {
                         "run_type": row[0],
@@ -90,6 +88,86 @@ class ReportExcel(ExcelFileFactory):
         return self.response_format
 
 
+class UserStoryExcel(ExcelFileFactory):
+
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+
+    def _init_workbook(self):
+        self.ws = super()._init_workbook()
+        return self.ws
+
+    def import_data(self):
+        _testcase = []
+        try:
+            for row in self._init_workbook().iter_rows(min_row=2, values_only=True):
+                if row[0] is not None:
+                    _data = {
+                        "test_name": row[1],
+                        "summary": row[3],
+                        "description": row[3]
+                    }
+                    _testcase.append(TestCaseModel(**_data))
+            with transaction.atomic():
+                TestCaseModel.objects.bulk_create(_testcase)
+        except Exception as e:
+            self.response_format["status"] = False
+            self.response_format["status_code"] = status.HTTP_400_BAD_REQUEST
+            self.response_format["data"] = "Error"
+            self.response_format["massage"] = str(e)
+            return self.response_format
+        self.response_format["status"] = True
+        self.response_format["status_code"] = status.HTTP_200_OK
+        self.response_format["data"] = "Success"
+        self.response_format["massage"] = "Created"
+        return self.response_format
+
+
+class TestcaseMetaExcel(ExcelFileFactory):
+
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+
+    def _init_workbook(self):
+        self.ws = super()._init_workbook()
+        return self.ws
+
+    def import_data(self):
+        _testcase = []
+        try:
+            for row in self._init_workbook().iter_rows(min_row=2, values_only=True):
+                if row[0] is not None:
+                    testcase = TestCaseModel.objects.get(test_name=row[1])
+                    _data = {
+                        'testcase': testcase,
+                        'likelihood': row[4],
+                        'impact': row[5],
+                        'priority': row[6],
+                        'failure_rate': row[7],
+                        'failure': row[8],
+                        'total_runs': int(row[9]),
+                        'direct_impact': row[10],
+                        'defects': row[12],
+                        'severity': row[13],
+                        'feature_size': row[14],
+                        'execution_time': row[15],
+                    }
+                    _testcase.append(TestCaseMetaData(**_data))
+            with transaction.atomic():
+                TestCaseMetaData.objects.bulk_create(_testcase)
+        except Exception as e:
+            self.response_format["status"] = False
+            self.response_format["status_code"] = status.HTTP_400_BAD_REQUEST
+            self.response_format["data"] = "Error"
+            self.response_format["massage"] = str(e)
+            return self.response_format
+        self.response_format["status"] = True
+        self.response_format["status_code"] = status.HTTP_200_OK
+        self.response_format["data"] = "Success"
+        self.response_format["massage"] = "Created"
+        return self.response_format
+
+
 class TestCaseExcel(ExcelFileFactory):
 
     def __init__(self, **kwargs):
@@ -106,7 +184,7 @@ class TestCaseExcel(ExcelFileFactory):
         testcase_list = []
         step_list = []
         natco_list = []
-        natco = NactoManufactureLanguage.objects.all()
+        natco = NactoManufacturesLanguage.objects.all()
         try:
             for row in self._init_workbook().iter_rows(min_row=2, values_only=True):
                 if row[2] is not None:

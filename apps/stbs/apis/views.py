@@ -4,7 +4,7 @@ from rest_framework.viewsets import ModelViewSet
 from apps.stbs.models import Language, STBManufacture, Natco, NactoManufacturesLanguage
 from apps.stbs.apis.serializers import LanguageSerializer, STBManufactureSerializer, NactoSerializer, \
     NatcoLanguageSerializer, NatcoOptionSerializer, LanguageOptionSerializer, DeviceOptionSerializer, \
-    ReportFilterSerializer
+    ReportFilterSerializer, NatcoFilterSerializerView
 from apps.testcases.pagination import CustomPagination
 from apps.stbs.mixins import OptionMixin
 from apps.stbs.permissions import LangaugeOptionPermission, NatcoOptionPermission, DeviceOptionPermission, \
@@ -157,3 +157,19 @@ class ReportFilterView(generics.GenericAPIView):
     def get(self, request, *args, **kwargs):
         serializer = self.get_serializer(self.get_queryset(), many=True)
         return Response(serializer.data)
+
+
+class  NatcoOptionFilterView(generics.GenericAPIView):
+
+    serializer_class = NatcoFilterSerializerView
+
+    def get_queryset(self):
+        queryset = Natco.objects.only('natco')
+        return queryset
+
+    def get(self, request, *args, **kwargs):
+        serializer = self.get_serializer(self.get_queryset(), many=True)
+
+        if serializer.data:
+            return Response(serializer.data)
+        return Response("ss", status=status.HTTP_400_BAD_REQUEST)

@@ -1,7 +1,9 @@
 import re
+from django.core.validators import MinValueValidator, MaxValueValidator
 from django.db import models
 from django_extensions.db.models import TimeStampedModel
 from django.utils.translation import gettext_lazy as _
+from decimal import Decimal
 from apps.stbs.models import Language, Natco, STBManufacture, STBNodeConfig, NatcoRelease
 from django.contrib.auth import get_user_model
 from simple_history.models import HistoricalRecords
@@ -10,7 +12,7 @@ from django.contrib.contenttypes.fields import GenericForeignKey, GenericRelatio
 from django.contrib.contenttypes.models import ContentType
 from autoslug import AutoSlugField
 from apps.testcases.managers import TestCaseManager
-from apps.core.models import Projects
+from apps.core.models import Project
 
 # Create your models here.
 
@@ -74,10 +76,12 @@ class TestCaseScript(TimeStampedModel):
             self.natco = self.natco.upper()
         super().save(*args, **kwargs)
 
+
 class TestCaseModel(TimeStampedModel):
 
     jira_id = models.IntegerField(_("Jira Id"), unique=True, help_text=("Jira Id"), blank=True, null=True)
-    test_name = models.CharField(_("Test Report Name"), max_length=255, help_text=("Please Enter the TestCase Name"))
+    test_name = models.CharField(_("Test Report Name"), max_length=255,
+                                 help_text=("Please Enter the TestCase Name"),)
     priority = models.CharField(max_length=20, choices=PriorityChoice.choices, default=PriorityChoice.CLASSTHREE)
     summary = models.TextField(_("Jira Summary"), default='')
     description = models.TextField(_('TestCase Description'), default='')
@@ -87,7 +91,7 @@ class TestCaseModel(TimeStampedModel):
                                          default=AutomationChoices.NOT_AUTOMATABLE)
     comments = GenericRelation("Comment", related_name='testcases')
     created_by = models.ForeignKey(get_user_model(), on_delete=models.SET_NULL, blank=True, null=True, to_field='email')
-    project = models.ForeignKey(Projects, on_delete=models.SET_NULL, blank=True, null=True, default='DT', to_field='name')
+    project = models.ForeignKey(Project, on_delete=models.SET_NULL, blank=True, null=True, default='DT', to_field='name')
     slug = AutoSlugField(populate_from='test_name', unique=True, always_update=True)
     history = HistoricalRecords()
     objects = TestCaseManager()
@@ -131,6 +135,7 @@ class TestCaseModel(TimeStampedModel):
 
 
 class NatcoSupport(TimeStampedModel):
+
     class NatcoStatusChoice(models.TextChoices):
         AUTOMATABLE = AutomationChoices.AUTOMATABLE
         NOT_AUTOMATABLE = AutomationChoices.NOT_AUTOMATABLE
@@ -206,6 +211,10 @@ class TestCaseStep(TimeStampedModel):
     expected_result = models.TextField(blank=True, null=True)
     status = models.CharField(max_length=20, choices=StatusChoices.choices, default=StatusChoices.TODO)
     history = HistoricalRecords()
+
+    class Meta:
+        verbose_name = "TestCase Step"
+        verbose_name_plural = "TestCase Steps"
 
 
 class TestReport(TimeStampedModel):
@@ -316,6 +325,9 @@ class ScriptIssue(TimeStampedModel):
         CLOSED = 'closed', _('Closed')
 
     id = models.BigAutoField(primary_key=True, unique=True, editable=False)
+    script_id = models.ForeignKey(TestCaseScript, on_delete=models.CASCADE, related_name='scripts', to_field='id',
+                                  null=True,
+                                  blank=True)
     testcase = models.ForeignKey(TestCaseModel, on_delete=models.CASCADE, max_length=255, related_name='issues')
     summary = models.TextField(default='')
     description = models.TextField(default='')
@@ -356,3 +368,63 @@ class Comment(TimeStampedModel):
 
     def __str__(self):
         return f"{self.comments[:20]}..."
+
+class TestCaseMetaData(TimeStampedModel):
+
+    testcase = models.ForeignKey(TestCaseModel, on_delete=models.CASCADE, related_name='planning', blank=True,
+                                 null=True, to_field='id',)
+    likelihood = models.IntegerField(default=0, blank=True, null=True,
+                                     validators=[MinValueValidator(0), MaxValueValidator(5)])
+    impact = models.IntegerField(default=0, blank=True, null=True,
+                                 validators=[MinValueValidator(0), MaxValueValidator(5)])
+    priority = models.IntegerField(default=0, blank=True, null=True,
+                                   validators=[MinValueValidator(0), MaxValueValidator(5)])
+    failure_rate = models.DecimalField(default=0, blank=True, null=True,
+                                       decimal_places=2, max_digits=5)
+    failure = models.IntegerField(default=0, blank=True, null=True,)
+    total_runs = models.IntegerField(default=0, blank=True, null=True,)
+    direct_impact = models.CharField(max_length=10, default='Yes', blank=True, null=True,)
+    defects = models.IntegerField(default=0, blank=True, null=True,)
+    severity = models.IntegerField(default=0, blank=True, null=True,
+                                   validators=[MinValueValidator(0), MaxValueValidator(10)])
+    feature_size = models.IntegerField(default=0, blank=True, null=True,
+                                       validators=[MinValueValidator(0), MaxValueValidator(10)])
+    execution_time = models.DecimalField(default=0, blank=True, null=True,
+                                         decimal_places=2, max_digits=4)
+
+    def __str__(self):
+        return self.testcase.test_name
+
+    @classmethod
+    def get_max_time(cls):
+        max_time = cls.objects.values_list('execution_time', flat=True).distinct()
+        return max(max_time)
+
+    def get_risk_score(self):
+        return Decimal(self.impact * self.likelihood) / 25
+
+    def get_history_metrix(self):
+        return Decimal(self.failure / self.total_runs) * self.failure_rate
+
+    def get_impact_value(self):
+        if self.direct_impact == 'Yes':
+            return Decimal(1)
+        return Decimal(0)
+
+    def get_defect_value(self):
+        return Decimal((self.defects / self.feature_size) * self.severity)
+
+    def get_execution_time(self):
+        return Decimal(self.execution_time / self.get_max_time())
+
+    def get_testscore(self):
+        return (self.get_risk_score() +
+                self.get_history_metrix() +
+                self.get_impact_value() +
+                self.get_defect_value() -
+                self.get_execution_time()
+                )
+
+    class Meta:
+        verbose_name = 'TestCase MetaData'
+        verbose_name_plural = 'TestCase MetaData'

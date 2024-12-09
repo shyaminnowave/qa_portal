@@ -1,9 +1,10 @@
-import re
+
 from rest_framework import serializers
 from simple_history.utils import update_change_reason
+from decimal import Decimal
 from apps.account.models import Account
 from apps.testcases.models import TestCaseModel, TestCaseStep, NatcoStatus, TestcaseExcelResult, TestReport, \
-    TestCaseChoices, Comment, ScriptIssue, TestCaseScript
+    TestCaseChoices, Comment, ScriptIssue, TestCaseScript, TestCaseMetaData
 from apps.stbs.models import Natco, NactoManufacturesLanguage, NatcoRelease
 from datetime import datetime
 from django.contrib.contenttypes.models import ContentType
@@ -492,6 +493,19 @@ class IssueCommentSerializer(serializers.ModelSerializer):
         represent['created_by'] = instance.created_by.fullname
         return represent
 
+class ScriptIssueList(serializers.ModelSerializer):
+
+    class Meta:
+        model = ScriptIssue
+        fields = ('id', 'summary', 'status', 'created_by', 'resolved_by')
+
+    def to_representation(self, instance):
+        represent = super().to_representation(instance)
+        represent['created_by'] = instance.created_by.fullname if instance.created_by else None
+        represent['resolved_by'] = instance.resolved_by.fullname if instance.resolved_by else None
+        return represent
+
+
 class ScriptIssueSerializer(serializers.ModelSerializer):
 
     id = serializers.PrimaryKeyRelatedField(read_only=True)
@@ -501,7 +515,7 @@ class ScriptIssueSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = ScriptIssue
-        fields = ['id', 'summary', 'description', 'status', 'issues_comment', 'created_by', 'resolved_by', 'created',
+        fields = ['id', 'script_id', 'summary', 'description', 'status', 'issues_comment', 'created_by', 'resolved_by', 'created',
                   'modified']
 
     def get_account_instance(self, email):
@@ -550,6 +564,7 @@ class ScriptIssueSerializer(serializers.ModelSerializer):
 
 class TestcaseScriptSerializer(serializers.ModelSerializer):
 
+    scripts = ScriptIssueList(many=True, read_only=True)
     created = serializers.SerializerMethodField(required=False, read_only=True)
     modified = serializers.SerializerMethodField(required=False, read_only=True)
 
@@ -571,6 +586,7 @@ class TestcaseScriptSerializer(serializers.ModelSerializer):
                 'id',
                 'script_name', 
                 'script_location',
+                'scripts',
                 'script_type',
                 'description',
                 'developed_by',
@@ -584,6 +600,7 @@ class TestcaseScriptSerializer(serializers.ModelSerializer):
                 'id',
                 'script_name',
                 'script_location',
+                'scripts',
                 'script_type',
                 'testcase',
                 'description',
@@ -612,4 +629,16 @@ class TestcaseScriptSerializer(serializers.ModelSerializer):
             represent['developed_by'] = instance.developed_by.fullname if instance.developed_by else None
             represent['reviewed_by'] = instance.reviewed_by.fullname if instance.reviewed_by else None
             represent['modified_by'] = instance.modified_by.fullname if instance.modified_by else None
+        return represent
+
+
+class TestMetaDataSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = TestCaseMetaData
+        fields = ('id', 'testcase', 'get_testscore')
+
+    def to_representation(self, instance):
+        represent = super().to_representation(instance)
+        represent['testcase'] = instance.testcase.test_name
         return represent

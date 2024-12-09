@@ -1,15 +1,22 @@
 from rest_framework import serializers
-
-from apps.core.models import Projects, ProjectIntegration
-
+from apps.core.models import Project, ProjectIntegration
+from analytiqa.helpers.exceptions import QAException
+from apps.account.models import Account
 
 class ProjectSerializer(serializers.ModelSerializer):
 
+    name = serializers.CharField(required=True, max_length=100)
     logo = serializers.FileField(required=False)
 
     class Meta:
-        model = Projects
+        model = Project
         fields = ('id', 'name', 'description', 'logo', 'account')
+
+    def validate(self, data):
+        name = data['name']
+        if Project.objects.filter(name=name).exists():
+            raise QAException("Project name already exists")
+        return data
 
     def to_representation(self, instance):
         response = super().to_representation(instance)

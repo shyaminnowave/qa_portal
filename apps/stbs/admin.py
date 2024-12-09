@@ -10,12 +10,12 @@ from django.contrib.admin.widgets import ManyToManyRawIdWidget
 
 
 @admin.register(Language)
-class LanguageAdmin(admin.ModelAdmin):
+class LanguageAdmin(ImportExportModelAdmin):
      search_fields = ['language']
 
 
 @admin.register(STBManufacture)
-class STBManufactureAdmin(admin.ModelAdmin):
+class STBManufactureAdmin(ImportExportModelAdmin):
     search_fields = ['manufacture']
 
 

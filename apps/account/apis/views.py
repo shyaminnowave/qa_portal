@@ -1,9 +1,6 @@
 from typing import Any
-from rest_framework.request import Request
 from rest_framework.views import Response
 from rest_framework import generics
-from rest_framework_simplejwt.exceptions import InvalidToken
-
 from apps.account.models import Account, ThirdPartyIntegrationTable
 from apps.account.apis.serializers import AccountSerializer, LoginSerializer, ProfileSerializer, UserListSerializer, \
                                 PermissionSerializer, GroupListSerializer, GroupSerializer, UserSerializer, \
@@ -23,10 +20,11 @@ from apps.testcases.apis.views import CustomPagination
 from django.contrib.auth.models import Group, Permission
 from apps.account.permissions import AdminUserPermission, DjangoModelPermissions, UserPermission, \
     GroupCreatePermission, DjangoObjectPermissions
-from rest_framework.permissions import IsAuthenticated
 from analytiqa.helpers.renders import ResponseInfo
 from analytiqa.helpers import custom_generics as cgenerics
 from apps.account.utils import get_project
+from rest_framework_simplejwt.exceptions import InvalidToken
+from analytiqa.helpers.exceptions import TokenExpireException
 
 
 # ------------------------------ ListAPIS ------------------------------
@@ -183,7 +181,7 @@ class LoginView(generics.GenericAPIView):
                 self.response_format['status'] = False
                 self.response_format['status_code'] = status.HTTP_400_BAD_REQUEST
                 self.response_format['data'] = user_cred
-                self.response_format['message'] = "User Login Failed, Please try again"
+                self.response_format['message'] = "Email or Password Not Match, Please enter the Correct Details"
                 return Response(self.response_format,
                                 status=status.HTTP_404_NOT_FOUND)
         except Exception as e:
@@ -360,11 +358,11 @@ class AccountTokenRefreshView(TokenViewBase):
             self.response_format['data'] = response.data
             self.response_format['message'] = "Success"
             return Response(self.response_format, status=status.HTTP_200_OK)
-        except InvalidToken:
+        except TokenExpireException:
             self.response_format['status'] = False
             self.response_format['status_code'] = status.HTTP_400_BAD_REQUEST
             self.response_format['data'] = None
-            self.response_format['message'] = str(InvalidToken.default_detail)
+            self.response_format['message'] = str(TokenExpireException.default_detail)
             return Response(self.response_format, status=status.HTTP_400_BAD_REQUEST)
 
 
@@ -451,7 +449,7 @@ class SetProjectView(APIView):
         self.response_format['data'] = "Cookie Created"
         self.response_format['message'] = "Success"
         response = Response(self.response_format, status=status.HTTP_200_OK)
-        response.set_cookie(key='project', value=project)
+        response.set_cookie(key='project', value=project, path='/')
         return response
 
 

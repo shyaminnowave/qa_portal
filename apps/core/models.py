@@ -7,17 +7,22 @@ from django.utils.translation import gettext_lazy as _
 
 User = get_user_model()
 
-class Projects(TimeStampedModel):
+class Project(TimeStampedModel):
 
     name = models.CharField(max_length=100, unique=True)
     logo = models.ImageField(upload_to='logo')
     description = models.TextField()
     account = models.ForeignKey(User, on_delete=models.CASCADE, to_field='email', related_name='projects')
+    project_key = models.CharField(max_length=100, unique=True, blank=True, null=True)
     is_active = models.BooleanField(default=True)
 
 
     def __str__(self):
         return self.name
+
+    class Meta:
+        verbose_name = 'Projects'
+        verbose_name_plural = 'Projects'
     
 
 class ProjectIntegration(TimeStampedModel):
@@ -27,7 +32,7 @@ class ProjectIntegration(TimeStampedModel):
         CONFLUENCE = 'confluence', _('Confluence')
 
     key = models.CharField(max_length=20, blank=True, null=True)
-    project = models.ForeignKey(Projects, on_delete=models.CASCADE,
+    project = models.ForeignKey(Project, on_delete=models.CASCADE,
                                 related_name='integrations')
     integration_type = models.CharField(choices=IntegrationChoice.choices, max_length=20,
                                 default=IntegrationChoice.JIRA)
@@ -39,4 +44,6 @@ class ProjectIntegration(TimeStampedModel):
     def __str__(self):
         return self.project.name
 
-
+    class Meta:
+        verbose_name = 'Integration'
+        verbose_name_plural = 'Integrations'

@@ -1,6 +1,6 @@
 from django.contrib import admin
 from apps.testcases.models import TestCaseModel, TestCaseStep, NatcoStatus, TestcaseExcelResult, TestReport, \
-                                TestCaseScript, Comment, ScriptIssue
+                                TestCaseScript, Comment, ScriptIssue, TestCaseMetaData
 from simple_history.admin import SimpleHistoryAdmin
 from import_export.admin import ExportMixin, ImportExportModelAdmin
 from django.contrib.contenttypes.admin import GenericTabularInline
@@ -65,5 +65,6 @@ admin.site.register(TestReport, ReportAdmin)
 admin.site.register(TestCaseScript)
 admin.site.register(Comment)
 admin.site.register(TestCaseStep, ImportExportModelAdmin)
+admin.site.register(TestCaseMetaData)
 
 # admin.site.register(Comment)

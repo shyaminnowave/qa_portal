@@ -1,7 +1,8 @@
 from rest_framework import generics
 from rest_framework.response import Response
 from rest_framework_simplejwt.authentication import JWTAuthentication
-from apps.core.models import Projects, ProjectIntegration
+from rest_framework.authentication import SessionAuthentication
+from apps.core.models import Project, ProjectIntegration
 from apps.core.utils import get_issues
 from apps.account.models import ThirdPartyIntegrationTable
 from apps.testcases.apis.views import CustomPagination
@@ -11,6 +12,7 @@ from analytiqa.helpers.renders import ResponseInfo
 from rest_framework import status
 from django.shortcuts import get_object_or_404
 from apps.account.utils import new_get_project
+from rest_framework.permissions import IsAuthenticated
 
 class IssuesAPIView(generics.ListAPIView):
 
@@ -19,7 +21,7 @@ class IssuesAPIView(generics.ListAPIView):
 
     def get(self, request, *args, **kwargs):
         project = self.kwargs.get('project')
-        api_token = ProjectIntegration.objects.filter(key=project).first()
+        api_token = ThirdPartyIntegrationTable.objects.filter(account='shyam6132@gmail.com').first()
         _data = get_issues(data=api_token, project=project, startAT=request.GET.get('startsAT', 0),
                            limit=self.request.GET.get('maxResults', 50))
         page = self.paginate_queryset(_data)
@@ -34,13 +36,14 @@ class ProjectAPIView(generics.ListCreateAPIView):
         self.response_format = ResponseInfo().response
         super().__init__(*args, **kwargs)
 
-    authentication_classes = [JWTAuthentication]
+    authentication_classes = (JWTAuthentication, SessionAuthentication)
+    # permission_classes = [IsAuthenticated,]
 
     pagination_class = CustomPagination
     serializer_class = ProjectSerializer
 
     def get_queryset(self):
-        queryset = Projects.objects.filter(account=self.request.user)
+        queryset = Project.objects.filter(account=self.request.user)
         return queryset
 
     def get(self, request, *args, **kwargs):
@@ -49,39 +52,56 @@ class ProjectAPIView(generics.ListCreateAPIView):
             self.response_format["status"] = True
             self.response_format["status_code"] = status.HTTP_200_OK
             self.response_format["data"] = response.data
-            self.response_format["message"] = "Success"
+            self.response_format["message"] = "Project successfully retrieved"
         else:
             self.response_format["status"] = False
             self.response_format["status_code"] = response.status_code
             self.response_format["data"] = response.error
-            self.response_format["message"] = "Error"
+            self.response_format["message"] = "Error retrieving project"
             return Response(self.response_format, status=response.status_code)
         return Response(self.response_format, status.HTTP_200_OK)
 
     def post(self, request, *args, **kwargs):
-        response = super().post(request, *args, **kwargs)
-        if response.status_code == status.HTTP_201_CREATED:
-            self.response_format["status"] = True
-            self.response_format["status_code"] = status.HTTP_201_CREATED
-            self.response_format["data"] = response.data
-            self.response_format["message"] = "Success"
-        else:
+        try:
+            response = super().post(request, *args, **kwargs)
+            if response.status_code == status.HTTP_201_CREATED:
+                self.response_format["status"] = True
+                self.response_format["status_code"] = status.HTTP_201_CREATED
+                self.response_format["data"] = response.data
+                self.response_format["message"] = "New Project created"
+            else:
+                self.response_format["status"] = False
+                self.response_format["status_code"] = response.status_code
+                self.response_format["data"] = "null"
+                self.response_format["message"] = "Project Creation Failed"
+                return Response(self.response_format, status=response.status_code)
+            return Response(self.response_format, status.HTTP_201_CREATED)
+        except Exception as e:
             self.response_format["status"] = False
-            self.response_format["status_code"] = response.status_code
-            self.response_format["data"] = response.error
-            self.response_format["message"] = "Error"
-            return Response(self.response_format, status=response.status_code)
-        return Response(self.response_format, status.HTTP_201_CREATED)
+            self.response_format["status_code"] = status.HTTP_400_BAD_REQUEST
+            self.response_format["data"] = None
+            self.response_format["message"] = str(e)
+            return Response(self.response_format, status.HTTP_400_BAD_REQUEST)
 
 
 class ProjectDetailAPIView(cgenerics.CustomRetrieveUpdateAPIView):
     
-    authentication_classes = [JWTAuthentication]
+    authentication_classes = [SessionAuthentication, JWTAuthentication]
     serializer_class = ProjectSerializer
     
     def get_object(self):
-        queryset = get_object_or_404(Projects, id=self.kwargs.get('pk', None))
+        queryset = get_object_or_404(Project, id=self.kwargs.get('pk', None))
         return queryset
+
+    def put(self, request, *args, **kwargs):
+        super().put(request, *args, **kwargs)
+        self.response_format["message"] = "Project Updated Successfully"
+        return Response(self.response_format, status=status.HTTP_200_OK)
+
+    def patch(self, request, *args, **kwargs):
+        super().patch(request, *args, **kwargs)
+        self.response_format["message"] = "Project Updated Successfully"
+        return Response(self.response_format, status=status.HTTP_200_OK)
 
 
 class ProjectIntegrateDetailView(generics.GenericAPIView):
@@ -130,8 +150,8 @@ class ProjectIntegrateDetailView(generics.GenericAPIView):
                 self.response_format["status"] = True
                 self.response_format["status_code"] = status.HTTP_200_OK
                 self.response_format["data"] = serializer.data
-                self.response_format["message"] = "Success"
-        return Response(self.response_format, status=status.HTTP_200_OK)
+                self.response_format["message"] = "Project Key Updated Successfully"
+            return Response(self.response_format, status=status.HTTP_200_OK)
 
 
 class ProjectIntegrationCreateView(generics.GenericAPIView):
@@ -152,7 +172,7 @@ class ProjectIntegrationCreateView(generics.GenericAPIView):
             self.response_format["status"] = True
             self.response_format["status_code"] = status.HTTP_200_OK
             self.response_format["data"] = combined_data
-            self.response_format["message"] = "Success"
+            self.response_format["message"] = "Project Integration Successfully"
         else:
             self.response_format["status"] = False
             self.response_format["status_code"] = status.HTTP_400_BAD_REQUEST

@@ -99,3 +99,19 @@ class DeviceOptionSerializer(serializers.ModelSerializer):
 class ReportFilterSerializer(serializers.Serializer):
 
     device_name = serializers.CharField(source="device_name__name", required=False)
+
+
+class NatcoFilterSerializerView(serializers.ModelSerializer):
+
+    label = serializers.CharField(required=False)
+    value = serializers.CharField(source="natco", required=False)
+
+    class Meta:
+        model = Natco
+        fields = ('label', 'value')
+
+    def to_representation(self, instance):
+        represent = super().to_representation(instance)
+        represent['label'] = instance.natco
+        return represent
+
