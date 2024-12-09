@@ -1,9 +1,10 @@
+
 from rest_framework import serializers
 from simple_history.utils import update_change_reason
 from decimal import Decimal
 from apps.account.models import Account
 from apps.testcases.models import TestCaseModel, TestCaseStep, NatcoStatus, TestcaseExcelResult, TestReport, \
-    TestCaseChoices, Comment, ScriptIssue, TestCaseScript
+    TestCaseChoices, Comment, ScriptIssue, TestCaseScript, TestCaseMetaData
 from apps.stbs.models import Natco, NactoManufacturesLanguage, NatcoRelease
 from datetime import datetime
 from django.contrib.contenttypes.models import ContentType
@@ -631,13 +632,13 @@ class TestcaseScriptSerializer(serializers.ModelSerializer):
         return represent
 
 
-# class TestMetaDataSerializer(serializers.ModelSerializer):
-#
-#     class Meta:
-#         model = TestCaseMetaData
-#         fields = ('id', 'testcase', 'get_testscore')
-#
-#     def to_representation(self, instance):
-#         represent = super().to_representation(instance)
-#         represent['testcase'] = instance.testcase.test_name
-#         return represent
+class TestMetaDataSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = TestCaseMetaData
+        fields = ('id', 'testcase', 'get_testscore')
+
+    def to_representation(self, instance):
+        represent = super().to_representation(instance)
+        represent['testcase'] = instance.testcase.test_name
+        return represent

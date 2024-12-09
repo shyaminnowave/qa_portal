@@ -13,7 +13,7 @@ class Project(TimeStampedModel):
     logo = models.ImageField(upload_to='logo')
     description = models.TextField()
     account = models.ForeignKey(User, on_delete=models.CASCADE, to_field='email', related_name='projects')
-    project_key = models.CharField(max_length=100, unique=True, blank=True, null=True)
+    project_key = models.CharField(max_length=100, unique=True)
     is_active = models.BooleanField(default=True)
 
 

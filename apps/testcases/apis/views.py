@@ -10,7 +10,7 @@ from apps.testcases.models import (
     AutomationChoices,
     StatusChoices,
     PriorityChoice,
-    TestReport, Comment, ScriptIssue, TestCaseScript
+    TestReport, Comment, ScriptIssue, TestCaseScript, TestCaseMetaData
 )
 from apps.testcases.apis.serializers import (
     TestCaseSerializerList,
@@ -28,6 +28,7 @@ from apps.testcases.apis.serializers import (
     ScriptIssueSerializer,
     CommentSerializer,
     TestcaseScriptSerializer,
+    TestMetaDataSerializer,
 )
 from rest_framework.response import Response
 from django.shortcuts import get_object_or_404
@@ -41,7 +42,7 @@ from rest_framework.views import APIView
 from rest_framework import status
 from django.db.models import Min, F, Count, Subquery, OuterRef, Avg, Q
 from apps.stbs.models import Natco
-from apps.testcases.utlity import ReportExcel, UserStoryExcel
+from apps.testcases.utlity import ReportExcel, UserStoryExcel, TestcaseMetaExcel
 # from apps.stb_tester.views import BaseAPI
 
 
@@ -757,6 +758,8 @@ class ExcelUploadView(generics.GenericAPIView):
                 instance = ReportExcel(file=method).import_data()
             elif kwargs_splitted[0] == 'self':
                 instance = UserStoryExcel(file=method).import_data()
+            elif kwargs_splitted[0] == 'k':
+                instance = TestcaseMetaExcel(file=method).import_data()
             return Response(instance)
         except Exception as e:
             return Response(str(e))
@@ -1129,17 +1132,17 @@ class TestcaseScriptDetailView(generics.GenericAPIView):
             return Response(self.response_format, status=status.HTTP_400_BAD_REQUEST)
 
 
-# class TestPlanning(generics.GenericAPIView):
-#
-#     serializer_class = TestMetaDataSerializer
-#     max_time = TestCaseMetaData.get_max_time()
-#     ordering_fields = ['get_testscore']
-#
-#     def get_queryset(self):
-#         queryset = TestCaseMetaData.objects.select_related('testcase').filter(testcase__project__project_key=self.kwargs['project'])
-#         return queryset
-#
-#     def get(self, request, *args, **kwargs):
-#         res = self.get_serializer(self.get_queryset(), many=True)
-#         sorted_testcase = sorted(res.data, key=lambda k: k['get_testscore'], reverse=True)
-#         return Response(sorted_testcase, status=status.HTTP_200_OK)
+class TestPlanning(generics.GenericAPIView):
+
+    serializer_class = TestMetaDataSerializer
+    max_time = TestCaseMetaData.get_max_time()
+    ordering_fields = ['get_testscore']
+
+    def get_queryset(self):
+        queryset = TestCaseMetaData.objects.select_related('testcase').filter(testcase__project__project_key=self.kwargs['project'])
+        return queryset
+
+    def get(self, request, *args, **kwargs):
+        res = self.get_serializer(self.get_queryset(), many=True)
+        sorted_testcase = sorted(res.data, key=lambda k: k['get_testscore'], reverse=True)
+        return Response(sorted_testcase, status=status.HTTP_200_OK)
