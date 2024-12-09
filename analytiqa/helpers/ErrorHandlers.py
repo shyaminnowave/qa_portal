@@ -21,13 +21,5 @@ class ERROR404View(generics.GenericAPIView):
         )
 
 
-class ERROR505View(generics.GenericAPIView):
-
-    renderer_classes = [TemplateHTMLRenderer]
-
-    def get(self, request, *args, **kwargs):
-        pass
-
-
 error404 = ERROR404View.as_view()
 

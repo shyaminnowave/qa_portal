@@ -20,7 +20,6 @@ class CustomCreateAPIView(mixins.CreateModelMixin, GenericAPIView):
                 self.response_format['status'] = True
                 self.response_format['status_code'] = response.status_code
                 self.response_format['data'] = response.data
-                self.response_format['message'] = "User Creation Successfull"
                 return Response(self.response_format, status=status.HTTP_201_CREATED)
             else:
                 self.response_format['status'] = False
@@ -31,8 +30,9 @@ class CustomCreateAPIView(mixins.CreateModelMixin, GenericAPIView):
         except Exception as e:
             self.response_format['status'] = False
             self.response_format['status_code'] = status.HTTP_500_INTERNAL_SERVER_ERROR
-            self.response_format['message'] = str(e)
+            self.response_format['message'] = e.detail
             return Response(self.response_format, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
 
 class CustomRetriveAPIVIew(mixins.RetrieveModelMixin, GenericAPIView): 
 
@@ -47,7 +47,6 @@ class CustomRetriveAPIVIew(mixins.RetrieveModelMixin, GenericAPIView):
                 self.response_format['status'] = True
                 self.response_format['status_code'] = status.HTTP_200_OK
                 self.response_format['data'] = response.data
-                self.response_format['message'] = "Success"
                 return Response(self.response_format, status=status.HTTP_200_OK)
             else:
                 self.response_format['status'] = False
@@ -57,7 +56,7 @@ class CustomRetriveAPIVIew(mixins.RetrieveModelMixin, GenericAPIView):
         except Exception as e:
             self.response_format['status'] = False
             self.response_format['status_code'] = status.HTTP_500_INTERNAL_SERVER_ERROR
-            self.response_format['message'] = str(e)
+            self.response_format['message'] = e.detail
             return Response(self.response_format, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
@@ -74,7 +73,6 @@ class CustomDestroyAPIView(mixins.DestroyModelMixin, GenericAPIView):
                 self.response_format['status'] = True
                 self.response_format['status_code'] = status.HTTP_200_OK
                 self.response_format['data'] = "Deleted"
-                self.response_format['message'] = "Success"
                 return Response(self.response_format, status=status.HTTP_200_OK)
             else:
                 self.response_format['status'] = False
@@ -84,7 +82,7 @@ class CustomDestroyAPIView(mixins.DestroyModelMixin, GenericAPIView):
         except Exception as e:
             self.response_format['status'] = False
             self.response_format['status_code'] = status.HTTP_500_INTERNAL_SERVER_ERROR
-            self.response_format['message'] = str(e)
+            self.response_format['message'] = e.detail
             return Response(self.response_format, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
@@ -101,7 +99,6 @@ class CustomUpdateAPIView(mixins.UpdateModelMixin, GenericAPIView):
                 self.response_format['status'] = True
                 self.response_format['status_code'] = status.HTTP_200_OK
                 self.response_format['data'] = response.data
-                self.response_format['message'] = "Success"
                 return Response(self.response_format, status=status.HTTP_200_OK)
             else:
                 self.response_format['status'] = False
@@ -111,7 +108,7 @@ class CustomUpdateAPIView(mixins.UpdateModelMixin, GenericAPIView):
         except Exception as e:
             self.response_format['status'] = False
             self.response_format['status_code'] = status.HTTP_500_INTERNAL_SERVER_ERROR
-            self.response_format['message'] = str(e)
+            self.response_format['message'] = e.detail
             return Response(self.response_format, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
         
     def patch(self, request, *args, **kwargs):
@@ -131,7 +128,7 @@ class CustomUpdateAPIView(mixins.UpdateModelMixin, GenericAPIView):
         except Exception as e:
             self.response_format['status'] = False
             self.response_format['status_code'] = status.HTTP_500_INTERNAL_SERVER_ERROR
-            self.response_format['message'] = str(e)
+            self.response_format['message'] = e.detail
             return Response(self.response_format, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
     
 
@@ -178,7 +175,7 @@ class CustomRetrieveUpdateAPIView(mixins.RetrieveModelMixin, mixins.UpdateModelM
         except Exception as e:
             self.response_format['status'] = False
             self.response_format['status_code'] = status.HTTP_500_INTERNAL_SERVER_ERROR
-            self.response_format['message'] = str(e)
+            self.response_format['message'] = e.detail
             return Response(self.response_format, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
         
     def patch(self, request, *args, **kwargs):
@@ -198,7 +195,7 @@ class CustomRetrieveUpdateAPIView(mixins.RetrieveModelMixin, mixins.UpdateModelM
         except Exception as e:
             self.response_format['status'] = False
             self.response_format['status_code'] = status.HTTP_500_INTERNAL_SERVER_ERROR
-            self.response_format['message'] = str(e)
+            self.response_format['message'] = e.detail
             return Response(self.response_format, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
@@ -225,7 +222,7 @@ class CustomRetrieveDestroyAPIView(mixins.RetrieveModelMixin, mixins.DestroyMode
         except Exception as e:
             self.response_format['status'] = False
             self.response_format['status_code'] = status.HTTP_500_INTERNAL_SERVER_ERROR
-            self.response_format['message'] = str(e)
+            self.response_format['message'] = e.detail
             return Response(self.response_format, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
         
     def delete(self, request, *args, **kwargs):
@@ -245,7 +242,7 @@ class CustomRetrieveDestroyAPIView(mixins.RetrieveModelMixin, mixins.DestroyMode
         except Exception as e:
             self.response_format['status'] = False
             self.response_format['status_code'] = status.HTTP_500_INTERNAL_SERVER_ERROR
-            self.response_format['message'] = str(e)
+            self.response_format['message'] = e.detail
             return Response(self.response_format, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
@@ -273,7 +270,7 @@ class CustomRetrieveUpdateDestroyAPIView(mixins.RetrieveModelMixin, mixins.Updat
         except Exception as e:
             self.response_format['status'] = False
             self.response_format['status_code'] = status.HTTP_500_INTERNAL_SERVER_ERROR
-            self.response_format['message'] = str(e)
+            self.response_format['message'] = e.detail
             return Response(self.response_format, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
     def put(self, request, *args, **kwargs):
@@ -293,7 +290,7 @@ class CustomRetrieveUpdateDestroyAPIView(mixins.RetrieveModelMixin, mixins.Updat
         except Exception as e:
             self.response_format['status'] = False
             self.response_format['status_code'] = status.HTTP_500_INTERNAL_SERVER_ERROR
-            self.response_format['message'] = str(e)
+            self.response_format['message'] = e.detail
             return Response(self.response_format, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
     def patch(self, request, *args, **kwargs):
@@ -313,7 +310,7 @@ class CustomRetrieveUpdateDestroyAPIView(mixins.RetrieveModelMixin, mixins.Updat
         except Exception as e:
             self.response_format['status'] = False
             self.response_format['status_code'] = status.HTTP_500_INTERNAL_SERVER_ERROR
-            self.response_format['message'] = str(e)
+            self.response_format['message'] = e.detail
             return Response(self.response_format, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
         
     def delete(self, request, *args, **kwargs):
@@ -333,6 +330,6 @@ class CustomRetrieveUpdateDestroyAPIView(mixins.RetrieveModelMixin, mixins.Updat
         except Exception as e:
             self.response_format['status'] = False
             self.response_format['status_code'] = status.HTTP_500_INTERNAL_SERVER_ERROR
-            self.response_format['message'] = str(e)
+            self.response_format['message'] = e.detail
             return Response(self.response_format, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
         

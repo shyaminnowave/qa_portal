@@ -7,7 +7,7 @@ class ResponseInfo:
         self.response = {
             "status": args.get('status', True),
             "status_code": args.get('status_code', ''),
-            "data": args.get('data', {}),
+            "data": args.get('data', None),
             "message": args.get('message', '')
         }
 
@@ -20,7 +20,7 @@ class CustomRenderer(JSONRenderer):
             "status": "sucesss",
             "status_code": status_code,
             "error": None,
-            "data": data,
+            "data": {},
             "message": None
         }
         if not str(status_code).startswith('2'):

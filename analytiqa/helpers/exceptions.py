@@ -1,6 +1,9 @@
 from rest_framework.exceptions import APIException, ValidationError, ReturnDict, ReturnList, force_str, ErrorDetail
 from rest_framework import status
 from django.utils.translation import gettext_lazy as _
+from rest_framework.views import exception_handler
+from rest_framework.response import Response
+from rest_framework_simplejwt.authentication import AuthenticationFailed
 
 
 def _get_error_details(data, default_code=None):
@@ -50,6 +53,51 @@ class CustomFieldException(APIException):
     
 class TokenExpireException(APIException):
 
-    status = status.HTTP_403_FORBIDDEN
+    status = status.HTTP_401_UNAUTHORIZED
     default_detail = _('Stb Token Expired')
     default_code = 'authentication_failed'
+
+
+class QAException(Exception):
+
+    default_detail = 'Invalid Data'
+    default_code = 'invalid'
+
+    def __init__(self, detail=None, code=None):
+        if detail is not None:
+            self.detail = detail
+        if code is not None:
+            self.code = code
+
+    def __str__(self):
+        return self.detail if self.detail is not None else self.default_detail
+
+    def __repr__(self):
+        return self.detail if self.detail is not None else self.default_detail
+
+def custom_exception_handler(exc, context):
+    """
+    Custom exception handler to return validation errors in the desired format.
+    """
+    # Get the standard DRF response
+    response = exception_handler(exc, context)
+
+    if response is not None and isinstance(response.data, dict):
+        # Reformat validation error messages
+        formatted_errors = {}
+        for field, errors in response.data.items():
+            if isinstance(errors, list):
+                # Use the first error message in the list
+                formatted_errors[field] = errors[0]
+            else:
+                formatted_errors[field] = errors
+
+        # Replace the response structure
+        response.data = {
+            "status": False,
+            "status_code": response.status_code,
+            "data": None,
+            "message": formatted_errors,
+        }
+
+    return response
