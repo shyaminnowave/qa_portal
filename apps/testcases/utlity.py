@@ -6,7 +6,6 @@ from apps.testcases.models import (
     NatcoStatus,
     TestCaseChoices,
     TestCaseStep,
-    TestCaseMetaData
 )
 from apps.stbs.models import NactoManufacturesLanguage, STBNodeConfig, NatcoRelease
 from analytiqa.helpers.renders import ResponseInfo
