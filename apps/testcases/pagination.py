@@ -11,7 +11,7 @@ class CustomPagination(PageNumberPagination):
 
     def get_paginated_response(self, data):
         response = super().get_paginated_response(data)
-        page_count = response.data.get('count') // self.page_size 
+        page_count = response.data.get('count') // self.page_size
         return Response(OrderedDict([
             ('count', self.page.paginator.count),
             ('next', response.data.get('next')),
