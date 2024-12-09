@@ -757,8 +757,6 @@ class ExcelUploadView(generics.GenericAPIView):
                 instance = ReportExcel(file=method).import_data()
             elif kwargs_splitted[0] == 'self':
                 instance = UserStoryExcel(file=method).import_data()
-            elif kwargs_splitted[0] == 'k':
-                instance = TestcaseMetaExcel(file=method).import_data()
             return Response(instance)
         except Exception as e:
             return Response(str(e))
