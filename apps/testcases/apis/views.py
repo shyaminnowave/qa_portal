@@ -10,7 +10,7 @@ from apps.testcases.models import (
     AutomationChoices,
     StatusChoices,
     PriorityChoice,
-    TestReport, Comment, ScriptIssue, TestCaseScript, TestCaseMetaData
+    TestReport, Comment, ScriptIssue, TestCaseScript
 )
 from apps.testcases.apis.serializers import (
     TestCaseSerializerList,
@@ -28,7 +28,6 @@ from apps.testcases.apis.serializers import (
     ScriptIssueSerializer,
     CommentSerializer,
     TestcaseScriptSerializer,
-    TestMetaDataSerializer,
 )
 from rest_framework.response import Response
 from django.shortcuts import get_object_or_404
