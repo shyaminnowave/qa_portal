@@ -1,18 +1,14 @@
-
 from rest_framework import serializers
 from simple_history.utils import update_change_reason
-from decimal import Decimal
 from apps.account.models import Account
 from apps.testcases.models import TestCaseModel, TestCaseStep, NatcoStatus, TestcaseExcelResult, TestReport, \
-    TestCaseChoices, Comment, ScriptIssue, TestCaseScript, TestCaseMetaData
+    TestCaseChoices, Comment, ScriptIssue, TestCaseScript, TestCaseMetaData, TestPlanning
 from apps.stbs.models import Natco, NactoManufacturesLanguage, NatcoRelease
 from datetime import datetime
 from django.contrib.contenttypes.models import ContentType
-from apps.stb_tester.serializers import ResultSerializer
 from django.shortcuts import get_object_or_404
+from analytiqa.helpers.exceptions import QAException
 # from apps.stb_tester.views import BaseAPI
-from collections import defaultdict
-from apps.stbs.apis.serializers import NactoSerializer
 
 
 class TestCaseSerializerList(serializers.ModelSerializer):
@@ -634,11 +630,36 @@ class TestcaseScriptSerializer(serializers.ModelSerializer):
 
 class TestMetaDataSerializer(serializers.ModelSerializer):
 
+    testcase_id = serializers.IntegerField(read_only=True, source='testcase.id')
+    testcase_type = serializers.CharField(read_only=True, source='testcase.testcase_type')
+    priority = serializers.CharField(read_only=True, source='testcase.priority')
+    status = serializers.CharField(read_only=True, source='testcase.status')
+
+
     class Meta:
         model = TestCaseMetaData
-        fields = ('id', 'testcase', 'get_testscore')
+        fields = ('id', 'testcase', 'testcase_id', 'testcase_type', 'priority', 'status', 'get_testscore')
 
     def to_representation(self, instance):
         represent = super().to_representation(instance)
         represent['testcase'] = instance.testcase.test_name
         return represent
+
+
+class TestPlanningSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = TestPlanning
+        fields = ('id', 'name', 'summary', 'priority', 'project')
+
+
+    def validated(self, data):
+        name = data['name']
+        if TestPlanning.objects.filter(name=name).exists():
+            raise QAException("Testcase Planning Name Already Exists")
+        return data
+
+    def to_representation(self, instance):
+        response = super().to_representation(instance)
+        response['reporter'] = instance.reporter.fullname if instance.reporter else None
+        return response

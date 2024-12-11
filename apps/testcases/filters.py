@@ -1,5 +1,3 @@
-from unittest import TestCase
-
 import django_filters
 from apps.testcases.models import NatcoStatus, TestCaseModel
 

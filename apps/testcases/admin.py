@@ -26,10 +26,10 @@ class CommentAdmin(GenericTabularInline):
 
 class TestCaseModelAdmin(SimpleHistoryAdmin, ImportExportModelAdmin):
 
-    list_display = ['id', 'test_name', 'priority', 'testcase_type', 'automation_status']
+    list_display = ['id', 'test_name', 'priority', 'testcase_type', 'automation_status', 'project']
     # search_fields = ('jira_id',)
     list_filter = ('priority', 'testcase_type')
-    list_editable = ('test_name', 'priority', 'testcase_type', 'automation_status')
+    list_editable = ('test_name', 'priority', 'testcase_type', 'automation_status', 'project')
     inlines = [TestStepAdmin, CommentAdmin]
 
 
@@ -65,6 +65,6 @@ admin.site.register(TestReport, ReportAdmin)
 admin.site.register(TestCaseScript)
 admin.site.register(Comment)
 admin.site.register(TestCaseStep, ImportExportModelAdmin)
-admin.site.register(TestCaseMetaData)
+admin.site.register(TestCaseMetaData, ImportExportModelAdmin)
 
 # admin.site.register(Comment)

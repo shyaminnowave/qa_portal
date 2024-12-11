@@ -6,7 +6,8 @@ from apps.testcases.models import (
     NatcoStatus,
     TestCaseChoices,
     TestCaseStep,
-    TestCaseMetaData
+    TestCaseMetaData,
+    Project
 )
 from apps.stbs.models import NactoManufacturesLanguage, STBNodeConfig, NatcoRelease
 from analytiqa.helpers.renders import ResponseInfo
@@ -99,13 +100,19 @@ class UserStoryExcel(ExcelFileFactory):
 
     def import_data(self):
         _testcase = []
+        _data = {}
         try:
             for row in self._init_workbook().iter_rows(min_row=2, values_only=True):
+                project = Project.objects.get(project_key='ai')
+                print(project)
+                if project:
+                    _data['project'] = project
                 if row[0] is not None:
                     _data = {
                         "test_name": row[1],
                         "summary": row[3],
-                        "description": row[3]
+                        "description": row[3],
+                        "project": _data['project'] if _data['project'] else None
                     }
                     _testcase.append(TestCaseModel(**_data))
             with transaction.atomic():

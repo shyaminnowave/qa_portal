@@ -7,7 +7,7 @@ from decimal import Decimal
 from apps.stbs.models import Language, Natco, STBManufacture, STBNodeConfig, NatcoRelease
 from django.contrib.auth import get_user_model
 from simple_history.models import HistoricalRecords
-from django.db.models import Max
+from django.db.models import Max, SET_NULL
 from django.contrib.contenttypes.fields import GenericForeignKey, GenericRelation
 from django.contrib.contenttypes.models import ContentType
 from autoslug import AutoSlugField
@@ -91,7 +91,7 @@ class TestCaseModel(TimeStampedModel):
                                          default=AutomationChoices.NOT_AUTOMATABLE)
     comments = GenericRelation("Comment", related_name='testcases')
     created_by = models.ForeignKey(get_user_model(), on_delete=models.SET_NULL, blank=True, null=True, to_field='email')
-    project = models.ForeignKey(Project, on_delete=models.SET_NULL, blank=True, null=True, default='DT', to_field='name')
+    project = models.ForeignKey(Project, on_delete=models.SET_NULL, blank=True, null=True, to_field='project_key')
     slug = AutoSlugField(populate_from='test_name', unique=True, always_update=True)
     history = HistoricalRecords()
     objects = TestCaseManager()
@@ -398,7 +398,7 @@ class TestCaseMetaData(TimeStampedModel):
     @classmethod
     def get_max_time(cls):
         max_time = cls.objects.values_list('execution_time', flat=True).distinct()
-        return max(max_time)
+        return max(max_time) if max_time else 0
 
     def get_risk_score(self):
         return Decimal(self.impact * self.likelihood) / 25
@@ -428,3 +428,16 @@ class TestCaseMetaData(TimeStampedModel):
     class Meta:
         verbose_name = 'TestCase MetaData'
         verbose_name_plural = 'TestCase MetaData'
+
+
+class TestPlanning(TimeStampedModel):
+
+    name = models.CharField(max_length=100)
+    summary = models.TextField(default='')
+    reporter = models.ForeignKey(User, on_delete=models.SET_NULL, blank=True, null=True,)
+    priority = models.CharField(max_length=10, default='class_1', blank=True, null=True,)
+    project = models.ForeignKey(Project, on_delete=SET_NULL, to_field='project_key', blank=True, null=True,)
+
+    class Meta:
+        verbose_name = 'Test Planning'
+        verbose_name_plural = 'Test Plannings'

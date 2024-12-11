@@ -22,7 +22,7 @@ class ProjectSerializer(serializers.ModelSerializer):
         response = super().to_representation(instance)
         integration = instance.integrations.first()
         response['account'] = instance.account.fullname
-        response['key'] = integration.key if integration else None
+        response['key'] = integration.key if integration else instance.project_key
         return response
 
 

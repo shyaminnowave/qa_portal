@@ -10,7 +10,7 @@ from apps.testcases.models import (
     AutomationChoices,
     StatusChoices,
     PriorityChoice,
-    TestReport, Comment, ScriptIssue, TestCaseScript, TestCaseMetaData
+    TestReport, Comment, ScriptIssue, TestCaseScript, TestCaseMetaData, TestPlanning
 )
 from apps.testcases.apis.serializers import (
     TestCaseSerializerList,
@@ -29,6 +29,7 @@ from apps.testcases.apis.serializers import (
     CommentSerializer,
     TestcaseScriptSerializer,
     TestMetaDataSerializer,
+    TestPlanningSerializer
 )
 from rest_framework.response import Response
 from django.shortcuts import get_object_or_404
@@ -1132,17 +1133,62 @@ class TestcaseScriptDetailView(generics.GenericAPIView):
             return Response(self.response_format, status=status.HTTP_400_BAD_REQUEST)
 
 
-# class TestPlanning(generics.GenericAPIView):
-#
-#     serializer_class = TestMetaDataSerializer
-#     max_time = TestCaseMetaData.get_max_time()
-#     ordering_fields = ['get_testscore']
-#
-#     def get_queryset(self):
-#         queryset = TestCaseMetaData.objects.select_related('testcase').filter(testcase__project__project_key=self.kwargs['project'])
-#         return queryset
-#
-#     def get(self, request, *args, **kwargs):
-#         res = self.get_serializer(self.get_queryset(), many=True)
-#         sorted_testcase = sorted(res.data, key=lambda k: k['get_testscore'], reverse=True)
-#         return Response(sorted_testcase, status=status.HTTP_200_OK)
+class TestScoreView(generics.GenericAPIView):
+
+    def __init__(self, **kwargs) -> None:
+        self.response_format = ResponseInfo().response
+        super().__init__(**kwargs)
+
+    serializer_class = TestMetaDataSerializer
+    ordering_fields = ['get_testscore']
+
+    def get_queryset(self):
+        queryset = TestCaseMetaData.objects.select_related('testcase').filter(testcase__project__project_key=self.kwargs['project'])
+        return queryset
+
+    def get(self, request, *args, **kwargs):
+        res = self.get_serializer(self.get_queryset(), many=True)
+        if not res.data:
+            self.response_format["status"] = False
+            self.response_format["status_code"] = status.HTTP_404_NOT_FOUND
+            self.response_format["data"] = "Not Found"
+            self.response_format["message"] = "No TestCase Meta Data for this Project"
+            return Response(self.response_format, status=status.HTTP_404_NOT_FOUND)
+        else:
+            sorted_testcase = sorted(res.data, key=lambda k: k['get_testscore'], reverse=True)
+            self.response_format["status"] = True
+            self.response_format["status_code"] = status.HTTP_200_OK
+            self.response_format["data"] = sorted_testcase
+            self.response_format["message"] = "Success"
+            return Response(sorted_testcase, status=status.HTTP_200_OK)
+
+
+class TestCasePlanningView(generics.ListCreateAPIView):
+
+    def __init__(self, **kwargs) -> None:
+        self.response_format = ResponseInfo().response
+        super().__init__(**kwargs)
+
+    def get_queryset(self):
+        queryset = TestPlanning.objects.filter(project=self.kwargs['project'])
+        return queryset
+
+    serializer_class = TestPlanningSerializer
+    pagination_class = CustomPagination
+
+    def get(self, request, *args, **kwargs):
+        response = super().get(request, *args, **kwargs)
+        self.response_format["status"] = True
+        self.response_format["status_code"] = status.HTTP_200_OK
+        self.response_format["data"] = response.data
+        self.response_format["message"] = "Test Planning"
+        return Response(self.response_format, status=status.HTTP_200_OK)
+
+    def post(self, request, *args, **kwargs):
+        response = super().post(request, *args, **kwargs)
+        self.response_format["status"] = True
+        self.response_format["status_code"] = status.HTTP_200_OK
+        self.response_format["data"] = response.data
+        self.response_format["message"] = "Test Planning Created Successfully"
+        return Response(self.response_format, status=status.HTTP_200_OK)
+
