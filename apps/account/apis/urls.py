@@ -21,4 +21,5 @@ urlpatterns = [
     path('deactivate/', views.DeactivateIntegrationView.as_view()),
     path('set-project/', views.SetProjectView.as_view()),
 
+
 ]

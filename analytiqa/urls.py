@@ -27,6 +27,7 @@ urlpatterns = [
     path('api/schema/redoc/', SpectacularRedocView.as_view(url_name='schema'), name='redoc'),
     path('api/', include('apps.account.apis.urls', namespace='accounts')),
     path('api/', include('apps.stbs.apis.urls', namespace='stbs')),
+    path('api/', include('apps.core.apis.urls')),
     path('api/', include('apps.testcases.apis.urls', namespace='testcases')),
     path('api/', include('apps.stb_tester.urls', namespace='stb-tester')),
     path("__debug__/", include("debug_toolbar.urls")),

@@ -17,17 +17,14 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = os.environ.get('DJANGO_SECRET_KEY')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True if os.environ.get('DEBUG') == '1' else False
-
-ALLOWED_HOSTS = []
+# DEBUG = True if os.environ.get('DEBUG') == '1' else False
+DEBUG = True
+ALLOWED_HOSTS = ['127.0.0.1']
 if not DEBUG:
     ALLOWED_HOSTS += [os.environ.get('ALLOWED_HOSTS')]
 
 CORS_ORIGIN_ALLOW_ALL = True if os.environ.get('CORS_ORIGIN_ALLOW_ALL') == '1' else False
 CORS_ALLOW_CREDENTIALS = True if os.environ.get('CORS_ALLOW_CREDENTIALS') == '1' else False
-
-CORS_ALLOWED_ORIGINS = [os.environ.get('CORS_ALLOWED_ORIGINS')]
-
 
 # Application definition
 
@@ -53,6 +50,7 @@ INSTALLED_APPS = [
     'apps.account',
     'apps.stb_tester',
     'apps.stbs',
+    'apps.core',
     'apps.testcases',
 ]
 
@@ -96,12 +94,12 @@ WSGI_APPLICATION = 'analytiqa.wsgi.application'
 
 DATABASES = {
     'default': {
-        'ENGINE': os.environ.get('ENGINE'),
-        'NAME': os.environ.get('NAME'),
-        'USER': os.environ.get('USERNAME'),
-        'PASSWORD': os.environ.get('PASSWORD'),
-        'HOST': os.environ.get('HOST'),
-        'PORT': os.environ.get('PORT')
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': 'analytiqa',
+        'HOST': 'localhost',
+        'USER': 'postgres',
+        'PASSWORD': 'shyam6132',
+        'PORT': 5432
     }
 }
 
@@ -135,7 +133,7 @@ REST_FRAMEWORK = {
 
 
 SIMPLE_JWT = {
-    "ACCESS_TOKEN_LIFETIME": timedelta(days=1),
+    "ACCESS_TOKEN_LIFETIME": timedelta(days=7),
     "REFRESH_TOKEN_LIFETIME": timedelta(days=30),
     "ROTATE_REFRESH_TOKENS": False,
     "BLACKLIST_AFTER_ROTATION": False,

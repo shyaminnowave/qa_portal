@@ -3,7 +3,7 @@ from django.db import models
 class TestCaseQuerySet(models.QuerySet):
 
     def performance_testcase(self):
-        return self.filter(testcase_type='performance')
+        return self.filter(testcase_type='performance', )
 
     def smoke_testcase(self):
         return self.filter(testcase_type='smoke')
