@@ -29,6 +29,7 @@ urlpatterns = [
     path('api/', include('apps.stbs.apis.urls', namespace='stbs')),
     path('api/', include('apps.testcases.apis.urls', namespace='testcases')),
     path('api/', include('apps.stb_tester.urls', namespace='stb-tester')),
+    path('api/', include('apps.core.apis.urls', namespace='core')),
     path("__debug__/", include("debug_toolbar.urls")),
     re_path(r'^.*$', TemplateView.as_view(template_name='index.html'))
 ]

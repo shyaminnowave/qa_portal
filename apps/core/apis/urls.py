@@ -3,7 +3,7 @@ from apps.core.apis.views import (IssuesAPIView, ProjectAPIView, ProjectDetailAP
                                   ProjectIntegrationCreateView)
 
 
-app_name = 'accounts'
+app_name = 'core'
 
 urlpatterns = [
     path('<str:project>/issues/', IssuesAPIView.as_view(), name='issues'),

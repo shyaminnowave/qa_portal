@@ -43,7 +43,7 @@ from rest_framework.views import APIView
 from rest_framework import status
 from django.db.models import Min, F, Count, Subquery, OuterRef, Avg, Q
 from apps.stbs.models import Natco
-from apps.testcases.utlity import ReportExcel, UserStoryExcel, TestcaseMetaExcel
+from apps.testcases.utlity import ReportExcel, UserStoryExcel, TestcaseMetaExcel, TestCaseDemoExcel
 # from apps.stb_tester.views import BaseAPI
 
 
@@ -761,6 +761,8 @@ class ExcelUploadView(generics.GenericAPIView):
                 instance = UserStoryExcel(file=method).import_data()
             elif kwargs_splitted[0] == 'k':
                 instance = TestcaseMetaExcel(file=method).import_data()
+            elif kwargs_splitted[0] == 'demo':
+                instance = TestCaseDemoExcel(file=method).import_data()
             return Response(instance)
         except Exception as e:
             return Response(str(e))
@@ -1143,7 +1145,7 @@ class TestScoreView(generics.GenericAPIView):
     ordering_fields = ['get_testscore']
 
     def get_queryset(self):
-        queryset = TestCaseMetaData.objects.select_related('testcase').filter(testcase__project__project_key=self.kwargs['project'])
+        queryset = TestCaseMetaData.objects.select_related('testcase').filter(testcase__project__project_key='dt')
         return queryset
 
     def get(self, request, *args, **kwargs):

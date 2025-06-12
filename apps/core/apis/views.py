@@ -36,7 +36,7 @@ class ProjectAPIView(generics.ListCreateAPIView):
         self.response_format = ResponseInfo().response
         super().__init__(*args, **kwargs)
 
-    authentication_classes = (JWTAuthentication, SessionAuthentication)
+    authentication_classes = (JWTAuthentication,)
     # permission_classes = [IsAuthenticated,]
 
     pagination_class = CustomPagination

@@ -14,6 +14,7 @@ from analytiqa.helpers.renders import ResponseInfo
 from rest_framework import status
 from django.db import transaction
 from functools import lru_cache
+from django.shortcuts import get_object_or_404
 
 
 class ExcelFileFactory:
@@ -25,6 +26,7 @@ class ExcelFileFactory:
 
     def _init_workbook(self):
         wb = load_workbook(self.file)
+        print(wb.active)
         return wb.active
 
 
@@ -142,9 +144,9 @@ class TestcaseMetaExcel(ExcelFileFactory):
     def import_data(self):
         _testcase = []
         try:
-            for row in self._init_workbook().iter_rows(min_row=2, values_only=True):
+            for row in self._init_workbook().iter_rows(min_row=3, values_only=True):
                 if row[0] is not None:
-                    testcase = TestCaseModel.objects.get(test_name=row[1])
+                    testcase = TestCaseModel.objects.get(id=row[0])
                     _data = {
                         'testcase': testcase,
                         'likelihood': row[4],
@@ -166,12 +168,56 @@ class TestcaseMetaExcel(ExcelFileFactory):
             self.response_format["status"] = False
             self.response_format["status_code"] = status.HTTP_400_BAD_REQUEST
             self.response_format["data"] = "Error"
-            self.response_format["massage"] = str(e)
+            self.response_format["message"] = str(e)
             return self.response_format
         self.response_format["status"] = True
         self.response_format["status_code"] = status.HTTP_200_OK
         self.response_format["data"] = "Success"
-        self.response_format["massage"] = "Created"
+        self.response_format["message"] = "Created"
+        return self.response_format
+    
+
+class TestCaseDemoExcel(ExcelFileFactory):
+
+    def __init__(self, file, **kwargs):
+        super().__init__(file, **kwargs)
+
+    def _init_workbook(self, ):
+        self.ws = super()._init_workbook()
+        return self.ws
+    
+    def import_data(self):
+        _testcase = []
+        get_project = Project.objects.filter(id = 1).first()
+        try:
+            for row in self._init_workbook().iter_rows(min_row=2, values_only=True):
+                if row[1] or row[2] is not None:
+                    _data = {
+                        "id": row[0],
+                        "jira_id": row[1],
+                        "test_name": row[2],
+                        "priority": row[3],
+                        "summary": row[4],
+                        "description": row[5],
+                        "testcase_type": row[6],
+                        "status": row[7],
+                        "automation_status": row[8],
+                    }
+                    _testcase.append(TestCaseModel(**_data))
+            with transaction.atomic():
+                    TestCaseModel.objects.bulk_create(
+                        _testcase
+                    )
+        except Exception as e:
+            self.response_format["status"] = False
+            self.response_format["status_code"] = status.HTTP_400_BAD_REQUEST
+            self.response_format["data"] = None
+            self.response_format["message"] = str(e)
+            return self.response_format
+        self.response_format["status"] = True
+        self.response_format["status_code"] = status.HTTP_200_OK
+        self.response_format["data"] = "Success"
+        self.response_format["message"] = "Created"
         return self.response_format
 
 

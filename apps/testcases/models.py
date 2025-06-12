@@ -92,7 +92,6 @@ class TestCaseModel(TimeStampedModel):
     comments = GenericRelation("Comment", related_name='testcases')
     created_by = models.ForeignKey(get_user_model(), on_delete=models.SET_NULL, blank=True, null=True, to_field='email')
     project = models.ForeignKey(Project, on_delete=models.SET_NULL, blank=True, null=True, to_field='project_key')
-    slug = AutoSlugField(populate_from='test_name', unique=True, always_update=True)
     history = HistoricalRecords()
     objects = TestCaseManager()
 
