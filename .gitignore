@@ -14,5 +14,3 @@ staticfiles/
 migrations/
 celerybeat-schedule
 docker-compose.yml
-requirements.txt
-
